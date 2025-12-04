@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card card-soft p-3">
+
+  <div class="text-center mb-3">
+    <h5 class="mb-1 fw-bold text-uppercase" style="letter-spacing: 1px;">Kamioni na placu</h5>
+    <small class="text-muted">Prikazani su samo kamioni koji nemaju evidentiran izlaz.</small>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-soft table-sm align-middle">
+      <thead class="text-center">
+        <tr>
+          <th>Registracija</th>
+          <th>Vozač</th>
+          <th>Telefon</th>
+          <th>Odredište</th>
+          <th>Datum dolaska</th>
+          <th>Vreme</th>
+          <th>Akcije</th>
+        </tr>
+      </thead>
+      <tbody class="text-center">
+      {% if rows %}
+        {% for r in rows %}
+        <tr>
+          <td class="fw-bold">{{ r.plate }}</td>
+          <td>{{ r.driver_name }}</td>
+          <td>{{ r.driver_phone or '' }}</td>
+          <td>{{ r.destination }}</td>
+          <td>{{ r.arrival_date | date_sr }}</td>
+          <td>{{ r.arrival_time }}</td>
+
+          <td>
+            <form method="post"
+                  action="{{ url_for('kamion_evidentiraj_izlaz', truck_id=r['id']) }}">
+              <button type="submit" class="btn btn-outline-danger btn-sm">
+                Evidentiraj izlaz
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      {% else %}
+        <tr>
+          <td colspan="7" class="text-center text-muted py-4">
+            Nema aktivnih kamiona na placu.
+          </td>
+        </tr>
+      {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

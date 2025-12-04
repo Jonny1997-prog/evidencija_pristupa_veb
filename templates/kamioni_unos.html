@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  :root {
+    /* CRVENA TEMA (Primary Action) */
+    --ls-red: #dc2626;
+    --ls-red-light: #ef4444;
+    --ls-red-glow: rgba(220, 38, 38, 0.5);
+
+    /* SIVA TEMA (Cancel) */
+    --ls-gray: #4b5563;
+    --ls-gray-light: #6b7280;
+    --ls-gray-glow: rgba(107, 114, 128, 0.5);
+
+    --ls-bg-icon: #fef2f2;
+  }
+
+  /* 1. STIL ZA IKONICE U NASLOVIMA */
+  .icon-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background-color: var(--ls-bg-icon);
+    color: var(--ls-red);
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(220, 38, 38, 0.15);
+    margin-right: 8px;
+    transition: transform 0.2s;
+  }
+
+  h6:hover .icon-badge {
+    transform: scale(1.1) rotate(5deg);
+  }
+
+  /* 2. ANIMIRANA DUGMAD */
+  .custom-btn {
+    min-width: 140px;
+    height: 38px;
+    display: inline-flex;
+    font-family: system-ui, -apple-system, sans-serif;
+    font-size: 13px;
+    align-items: center;
+    justify-content: center;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 700;
+    color: #ffffff;
+    border: none;
+    border-radius: 50px;
+    transition: all 0.3s ease-in-out;
+    cursor: pointer;
+    outline: none;
+    position: relative;
+    padding: 0 20px;
+    text-decoration: none;
+  }
+
+  .custom-btn::before {
+    content: '';
+    border-radius: 50px;
+    min-width: calc(100% + 4px);
+    min-height: calc(100% + 4px);
+    border: 2px solid transparent;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    transition: all .3s ease-in-out;
+    pointer-events: none;
+  }
+
+  .custom-btn:hover {
+    transform: translateY(-2px);
+    color: white;
+  }
+  .custom-btn:hover::before {
+    opacity: 1;
+  }
+
+  /* CRVENO DUGME (Sačuvaj) */
+  .btn-anim-red {
+    background: var(--ls-red);
+    background: linear-gradient(90deg, var(--ls-red-light) 0%, var(--ls-red) 100%);
+    box-shadow: 0px 4px 10px var(--ls-red-glow);
+  }
+  .btn-anim-red::before {
+    border-color: var(--ls-red-light);
+    box-shadow: 0 0 15px var(--ls-red-glow);
+  }
+  .btn-anim-red::after {
+    content: ''; width: 10px; height: 10px; border-radius: 100%; border: 2px solid var(--ls-red-light);
+    position: absolute; z-index: -1; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    animation: ring-red 1.5s infinite;
+  }
+  .btn-anim-red:hover::after { display: none; }
+
+  @keyframes ring-red {
+    0% { width: 10px; height: 10px; opacity: 1; }
+    100% { width: 150px; height: 150px; opacity: 0; }
+  }
+
+  /* SIVO DUGME (Otkaži) */
+  .btn-anim-gray {
+    background: var(--ls-gray);
+    background: linear-gradient(90deg, var(--ls-gray-light) 0%, var(--ls-gray) 100%);
+    box-shadow: 0px 4px 10px var(--ls-gray-glow);
+  }
+  .btn-anim-gray::before {
+    border-color: var(--ls-gray-light);
+    box-shadow: 0 0 15px var(--ls-gray-glow);
+  }
+  .btn-anim-gray::after {
+    content: ''; width: 10px; height: 10px; border-radius: 100%; border: 2px solid var(--ls-gray-light);
+    position: absolute; z-index: -1; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    animation: ring-gray 1.5s infinite;
+  }
+  .btn-anim-gray:hover::after { display: none; }
+
+  @keyframes ring-gray {
+    0% { width: 10px; height: 10px; opacity: 1; }
+    100% { width: 150px; height: 150px; opacity: 0; }
+  }
+</style>
+
+<div class="row justify-content-center">
+  <div class="col-lg-8 col-md-10">
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm mb-3" role="alert" style="border-radius: 15px;">
+            <i class="bi bi-info-circle-fill me-2"></i> {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <div class="card card-soft p-4 shadow-sm">
+
+      <div class="d-flex justify-content-between align-items-center mb-4">
+          <h4 class="mb-0 fw-bold">Unos kamiona</h4>
+          <span class="badge bg-primary rounded-pill px-3 py-2">Kamioni</span>
+      </div>
+
+      <form method="post">
+
+        <h6 class="text-uppercase text-muted small fw-bold mb-3 d-flex align-items-center">
+            <span class="icon-badge"><i class="bi bi-person-vcard"></i></span>
+            Podaci o vozaču
+        </h6>
+        <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label">Ime i prezime vozača <span class="text-danger">*</span></label>
+              <input type="text" name="driver_name" class="form-control" placeholder="Unesite ime vozača" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Dokument vozača (Lična karta / Pasoš)</label>
+              <input type="text" name="driver_document" class="form-control" placeholder="Br. dokumenta">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Telefon vozača</label>
+              <input type="text" name="driver_phone" class="form-control" placeholder="+381...">
+            </div>
+        </div>
+
+        <hr class="my-4 text-muted">
+
+        <h6 class="text-uppercase text-muted small fw-bold mb-3 d-flex align-items-center">
+            <span class="icon-badge"><i class="bi bi-people-fill"></i></span>
+            Podaci o suvozaču (Opciono)
+        </h6>
+        <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Ime i prezime suvozača</label>
+              <input type="text" name="codriver_name" class="form-control" placeholder="Unesite ime suvozača">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Broj dokumenta suvozača</label>
+              <input type="text" name="codriver_document" class="form-control" placeholder="Br. dokumenta">
+            </div>
+        </div>
+
+        <hr class="my-4 text-muted">
+
+        <h6 class="text-uppercase text-muted small fw-bold mb-3 d-flex align-items-center">
+            <span class="icon-badge"><i class="bi bi-truck"></i></span>
+            Podaci o vozilu i putu
+        </h6>
+        <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Registracija <span class="text-danger">*</span></label>
+              <input type="text" name="plate" class="form-control bg-light fw-bold" placeholder="BG123XX" required>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Odredište <span class="text-danger">*</span></label>
+              <select name="destination" class="form-select" required>
+                <option value="" disabled selected>Izaberite odredište...</option>
+                {% for d in destinations %}
+                  <option value="{{ d['value'] }}">{{ d['value'] }}</option>
+                {% endfor %}
+              </select>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-end align-items-center gap-3 mt-5">
+          <a href="{{ url_for('index') }}" class="custom-btn btn-anim-gray">
+            Otkaži
+          </a>
+
+          <button type="submit" class="custom-btn btn-anim-red">
+            Sačuvaj kamion
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // Trazimo polje sa name="plate"
+    var plateInput = document.querySelector('input[name="plate"]');
+
+    if(plateInput) {
+        plateInput.addEventListener('input', function() {
+            var start = this.selectionStart;
+            var end = this.selectionEnd;
+
+            // 1. Prebaci u velika slova
+            var val = this.value.toUpperCase();
+
+            // 2. Dozvoli SAMO slova i brojeve
+            val = val.replace(/[^A-Z0-9ŠĐČĆŽ]/g, '');
+
+            this.value = val;
+
+            this.setSelectionRange(start, end);
+        });
+    }
+});
+</script>
+
+{% endblock %}

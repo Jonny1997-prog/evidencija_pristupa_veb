@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8 col-md-10">
+    <div class="card card-soft p-4">
+      <h5 class="mb-3">Izmena posete #{{ visit.id }}</h5>
+
+      <form method="post" class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label">Datum</label>
+          <input type="date" name="arrival_date" class="form-control"
+                 value="{{ visit.arrival_date }}" required>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Najavljeno vreme</label>
+          <input type="time" name="expected_time" class="form-control"
+                 value="{{ visit.expected_time }}">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Broj osoba</label>
+          <input type="number" name="persons_count" class="form-control"
+                 value="{{ visit.persons_count }}">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Kod koga dolazi</label>
+          <select name="host_employee" class="form-select" required>
+            {% for e in employees %}
+              <option value="{{ e['value'] }}"
+                      {{ 'selected' if e['value'] == visit.host_employee else '' }}>
+                {{ e['value'] }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Objekat</label>
+          <select name="object_name" class="form-select" required>
+            {% for o in objects %}
+              <option value="{{ o['value'] }}"
+                      {{ 'selected' if o['value'] == visit.object_name else '' }}>
+                {{ o['value'] }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Gost</label>
+          <input type="text" name="guest_name" class="form-control"
+                 value="{{ visit.guest_name }}" required>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Telefon</label>
+          <input type="text" name="phone" class="form-control"
+                 value="{{ visit.phone }}">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Broj dokumenta</label>
+          <input type="text" name="document_number" class="form-control"
+                 value="{{ visit.document_number }}">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Registracija</label>
+          <input type="text" name="vehicle_plate" class="form-control"
+                 value="{{ visit.vehicle_plate }}">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Vreme ulaska</label>
+          <input type="text" name="entry_time" class="form-control"
+                 placeholder="YYYY-MM-DD HH:MM:SS"
+                 value="{{ visit.entry_time }}">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Vreme izlaska</label>
+          <input type="text" name="exit_time" class="form-control"
+                 placeholder="YYYY-MM-DD HH:MM:SS"
+                 value="{{ visit.exit_time }}">
+        </div>
+
+        <div class="col-12">
+          <label class="form-label">Napomena</label>
+          <textarea name="note" class="form-control" rows="3">{{ visit.note }}</textarea>
+        </div>
+
+        <div class="col-12 d-flex justify-content-end gap-2 mt-2">
+          <a href="{{ url_for('security_posete') }}" class="btn btn-light border">Nazad</a>
+          <button type="submit" class="btn btn-primary">Sačuvaj izmene</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

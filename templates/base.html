@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="sr">
+<head>
+  <meta charset="utf-8">
+  <title>{{ page_title or "LogiStar Evidencija" }}</title>
+
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='logo.png') }}">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css">
+
+<style>
+    :root {
+      --ls-red: #dc2626;
+      --ls-red-soft: #fee2e2;
+      --ls-gray-light: #f3f4f6;
+      --ls-dark: #0f172a;
+      --sidebar-width: 260px;
+    }
+
+    body {
+      background: var(--ls-gray-light);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      overflow-x: hidden;
+    }
+    .app-shell {
+      min-height: 100vh;
+      display: flex;
+    }
+
+    /* SIDEBAR */
+    .app-sidebar {
+      width: var(--sidebar-width);
+      min-width: var(--sidebar-width);
+      min-height: 100vh;
+      background: linear-gradient(180deg, #111827, #020617);
+      color: #e5e7eb;
+      transition: margin-left 0.3s ease;
+      border-right: 3px solid var(--ls-red);
+    }
+
+    /* MAIN CONTENT */
+    .app-main {
+      flex-grow: 1;
+      min-width: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at top left, #fef2f2 0, #f9fafb 45%, #f3f4f6 100%);
+      transition: all 0.3s ease;
+    }
+
+    /* COLLAPSED STANJE */
+    body.sidebar-collapsed .app-sidebar {
+      margin-left: calc(var(--sidebar-width) * -1);
+    }
+
+    /* Stilovi za header dugmiće (NOVO) */
+    .btn-icon {
+      width: 38px;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    .btn-icon:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Ostatak stila... */
+    .app-sidebar .brand { font-size: 1.25rem; font-weight: 600; letter-spacing: 0.03em; }
+    .app-sidebar .nav-link { color: #9ca3af; border-radius: 0.5rem; padding: 0.55rem 0.9rem; font-size: 0.95rem; display: flex; align-items: center; gap: .5rem; transition: background 0.15s ease, color 0.15s ease; }
+    .app-sidebar .nav-link:hover { background: rgba(31, 41, 55, 0.95); color: #f9fafb; }
+    .app-sidebar .nav-link.active { background: var(--ls-red); color: #f9fafb; box-shadow: 0 0 0 1px rgba(220, 38, 38, 0.7); }
+    .app-header { border-bottom: 1px solid rgba(148, 163, 184, 0.4); backdrop-filter: blur(10px); background: rgba(249, 250, 251, 0.9); }
+    .page-title { font-size: 1.3rem; font-weight: 600; color: #111827; }
+    .card-soft { border-radius: 1rem; border: 1px solid rgba(148, 163, 184, 0.7); box-shadow: 0 18px 45px rgba(15, 23, 42, 0.16); background: rgba(255, 255, 255, 0.96); border-top: 3px solid var(--ls-red); }
+
+    .table-soft thead th { background: var(--ls-red); color: #f9fafb; border-color: var(--ls-red) !important; white-space: nowrap; }
+    .table-soft tbody tr:nth-child(odd) { background: #ffffff; }
+    .table-soft tbody tr:nth-child(even) { background: var(--ls-gray-light); }
+    .table-soft tbody tr:hover { background: var(--ls-red-soft) !important; }
+
+    /* Mobilni meni */
+    @media (max-width: 767.98px) {
+      .app-sidebar {
+        position: fixed;
+        left: 0; top: 0; bottom: 0; z-index: 1040;
+        margin-left: calc(var(--sidebar-width) * -1);
+      }
+      body.sidebar-open .app-sidebar { margin-left: 0; }
+      body.sidebar-collapsed .app-sidebar { margin-left: calc(var(--sidebar-width) * -1); }
+    }
+
+    .sidebar-toggle-btn { border-radius: 999px; border: 1px solid rgba(148, 163, 184, 0.8); background: #ffffff; color: #111827; padding: 0.25rem 0.5rem; }
+    .sidebar-toggle-btn:hover { background: #e5e7eb; }
+    .btn-primary { background-color: var(--ls-red); border-color: var(--ls-red); }
+    .btn-primary:hover { background-color: #b91c1c; border-color: #b91c1c; }
+    .btn-outline-primary { color: var(--ls-red); border-color: var(--ls-red); }
+    .btn-outline-primary:hover { background-color: var(--ls-red); color: #fff; }
+    .badge.bg-primary { background-color: var(--ls-red) !important; }
+
+    /* Loading overlay */
+    .loading-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.75); display: flex; align-items: center; justify-content: center; z-index: 9999; }
+    .ring { position: relative; width: 150px; height: 150px; background: transparent; border: 3px solid #3c3c3c; border-radius: 50%; text-align: center; line-height: 150px; font-family: sans-serif; font-size: 18px; color: var(--ls-red); letter-spacing: 4px; text-transform: uppercase; text-shadow: 0 0 10px var(--ls-red); box-shadow: 0 0 20px rgba(0,0,0,.5); }
+    .ring:before { content: ''; position: absolute; top: -3px; left: -3px; width: 100%; height: 100%; border: 3px solid transparent; border-top: 3px solid var(--ls-red); border-right: 3px solid var(--ls-red); border-radius: 50%; animation: animateC 2s linear infinite; }
+    .ring span { display: block; position: absolute; top: calc(50% - 2px); left: 50%; width: 50%; height: 4px; background: transparent; transform-origin: left; animation: animate 2s linear infinite; }
+    .ring span:before { content: ''; position: absolute; width: 16px; height: 16px; border-radius: 50%; background: var(--ls-red); top: -6px; right: -8px; box-shadow: 0 0 20px var(--ls-red); }
+    @keyframes animateC { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    @keyframes animate { 0% { transform: rotate(45deg); } 100% { transform: rotate(405deg); } }
+  </style>
+</head>
+<body>
+
+<div id="loading-overlay" class="loading-overlay">
+  <div class="ring">Učitavanje
+    <span></span>
+  </div>
+</div>
+
+<div class="d-flex app-shell">
+  <aside class="app-sidebar d-flex flex-column p-3">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+      <div class="brand d-flex align-items-center gap-2">
+        <img src="{{ url_for('static', filename='logo.png') }}"
+             alt="Logo"
+             style="height: 32px; width: auto; object-fit: contain;">
+
+        <span style="font-weight: 600; font-size: 1.1rem;">LogiStar</span>
+      </div>
+    </div>
+
+    {% set role = session.get('role') %}
+    <nav class="nav flex-column gap-1 small">
+      <span class="text-xs text-uppercase text-gray-400 mb-1"
+            style="font-size:0.7rem; letter-spacing: .08em; color:#6b7280;">Posete</span>
+
+      {% if role in ['admin', 'employee', 'security_chief'] %}
+      <a href="{{ url_for('posete_najava') }}"
+         class="nav-link {% if request.endpoint == 'posete_najava' %}active{% endif %}">
+        <span>📝</span><span>Najava posete</span>
+      </a>
+      {% endif %}
+
+      {% if role in ['admin', 'portirnica', 'security_chief'] %}
+      <a href="{{ url_for('posete_nenajavljena') }}"
+         class="nav-link {% if request.endpoint == 'posete_nenajavljena' %}active{% endif %}">
+        <span>⚡</span><span>Poseta bez najave</span>
+      </a>
+      <a href="{{ url_for('posete_portirnica') }}"
+         class="nav-link {% if request.endpoint == 'posete_portirnica' %}active{% endif %}">
+        <span>👁️</span><span>Pregled poseta (danas)</span>
+      </a>
+      {% endif %}
+
+      <hr class="my-3" style="border-color: rgba(55,65,81,0.7);">
+      <span class="text-xs text-uppercase text-gray-400 mb-1"
+            style="font-size:0.7rem; letter-spacing: .08em; color:#6b7280;">Kamioni</span>
+
+      {% if role in ['admin', 'portirnica', 'security_chief'] %}
+      <a href="{{ url_for('kamioni_unos') }}"
+         class="nav-link {% if request.endpoint == 'kamioni_unos' %}active{% endif %}">
+        <span>🚚</span><span>Unos kamiona</span>
+      </a>
+      <a href="{{ url_for('kamioni_portirnica') }}"
+         class="nav-link {% if request.endpoint == 'kamioni_portirnica' %}active{% endif %}">
+        <span>📋</span><span>Kamioni na placu</span>
+      </a>
+      {% endif %}
+
+      {% if role in ['admin', 'security_chief'] %}
+      <hr class="my-3" style="border-color: rgba(55,65,81,0.7);">
+      <span class="text-xs text-uppercase text-gray-400 mb-1"
+            style="font-size:0.7rem; letter-spacing: .08em; color:#6b7280;">Evidencije</span>
+      <a href="{{ url_for('security_posete') }}"
+         class="nav-link {% if request.endpoint == 'security_posete' %}active{% endif %}">
+        <span>📑</span><span>Baza poseta</span>
+      </a>
+      <a href="{{ url_for('security_kamioni') }}"
+         class="nav-link {% if request.endpoint == 'security_kamioni' %}active{% endif %}">
+        <span>📦</span><span>Baza kamiona</span>
+      </a>
+      {% endif %}
+
+      {% if role == 'admin' %}
+      <hr class="my-3" style="border-color: rgba(55,65,81,0.7);">
+      <span class="text-xs text-uppercase text-gray-400 mb-1"
+            style="font-size:0.7rem; letter-spacing: .08em; color:#6b7280;">Administracija</span>
+      <a href="{{ url_for('admin_users') }}"
+         class="nav-link {% if request.endpoint == 'admin_users' %}active{% endif %}">
+        <span>⚙️</span><span>Korisnici i role</span>
+      </a>
+      <a href="{{ url_for('admin_lookups') }}"
+         class="nav-link {% if request.endpoint == 'admin_lookups' %}active{% endif %}">
+        <span>🧩</span><span>Padajući meniji</span>
+      </a>
+      {% endif %}
+    </nav>
+
+    <div class="mt-auto small text-muted pt-3" style="font-size: 0.7rem;">
+      <div>v1.0 – Evidencija LogiStar</div>
+      <div>Logistar evidencija panel</div>
+    </div>
+  </aside>
+
+  <main class="app-main d-flex flex-column">
+    <header class="app-header px-4 py-3 d-flex align-items-center justify-content-between">
+      <div class="d-flex align-items-center gap-2">
+        <button type="button" class="sidebar-toggle-btn" onclick="toggleSidebar()" title="Prikaži/sakrij meni">
+          <span class="sidebar-toggle-icon">☰</span>
+        </button>
+        <div class="page-title">{{ page_title or "LogiStar Evidencija" }}</div>
+      </div>
+
+      <div class="d-flex align-items-center gap-3">
+
+        <div class="text-muted small d-none d-sm-block">
+          {{ date_today }}
+        </div>
+
+        <div class="vr h-50 my-auto text-secondary mx-1 d-none d-sm-block"></div>
+
+        <div class="fw-semibold small text-dark d-none d-md-block">
+          {{ session.get('full_name', '') }}
+        </div>
+
+        <div class="d-flex gap-2 ms-1">
+            <a href="{{ url_for('change_password') }}"
+               class="btn btn-light border btn-icon rounded-circle shadow-sm"
+               title="Moj profil / Promena lozinke">
+               <i class="bi bi-person-gear text-dark fs-6"></i>
+            </a>
+
+            <a href="{{ url_for('logout') }}"
+               class="btn btn-light border btn-icon rounded-circle shadow-sm"
+               title="Odjavi se">
+               <i class="bi bi-box-arrow-right text-danger fs-6"></i>
+            </a>
+        </div>
+      </div>
+
+    </header>
+
+    <section class="flex-grow-1 p-4">
+      <div class="container-fluid">
+        {% block content %}{% endblock %}
+      </div>
+    </section>
+  </main>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
+
+<script>
+  // 1. ISKLJUČIVANJE ALERT GREŠAKA ZA DATATABLES
+  if (window.jQuery && $.fn.dataTable) {
+    $.fn.dataTable.ext.errMode = 'none';
+  }
+
+  // 2. SKRIVANJE LOADING OVERLAY-A
+  function hideLoadingOverlay() {
+    const overlay = document.getElementById('loading-overlay');
+    if (!overlay) return;
+    overlay.style.transition = 'opacity 0.3s ease';
+    overlay.style.opacity = '0';
+    setTimeout(function () {
+      overlay.style.display = 'none';
+    }, 300);
+  }
+  window.addEventListener('load', hideLoadingOverlay);
+
+  // 3. PRILAGOĐAVANJE KOLONA KAD SE MENI SAKRIJE/PRIKAŽE
+  function adjustDataTablesColumns() {
+    if (!(window.jQuery && $.fn.DataTable)) return;
+    setTimeout(function () {
+      $($.fn.dataTable.tables(true)).DataTable().columns.adjust();
+    }, 350);
+  }
+
+  function toggleSidebar() {
+    document.body.classList.toggle('sidebar-collapsed');
+    adjustDataTablesColumns();
+  }
+
+  // 4. GLAVNA INICIJALIZACIJA TABELA
+  document.addEventListener('DOMContentLoaded', function () {
+    if (!(window.jQuery && $.fn.DataTable)) {
+      console.warn('DataTables nije učitan.');
+      return;
+    }
+
+    // A) Standardne tabele
+    $('.data-table-default').each(function() {
+        if ($.fn.DataTable.isDataTable(this)) {
+            $(this).DataTable().destroy();
+        }
+        $(this).DataTable({
+            language: { url: "https://cdn.datatables.net/plug-ins/1.13.6/i18n/sr-SP.json" },
+            pageLength: 10,
+            lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Sve"]],
+        });
+    });
+
+    // B) Skrol tabele (POSETE i KAMIONI)
+    var $scrollTables = $('.data-table-scroll');
+    if ($scrollTables.length) {
+      $scrollTables.each(function() {
+        if ($.fn.DataTable.isDataTable(this)) {
+            $(this).DataTable().destroy();
+        }
+
+        $(this).DataTable({
+          language: {
+            url: "https://cdn.datatables.net/plug-ins/1.13.6/i18n/sr-SP.json"
+          },
+          scrollY: '60vh',       // Ograničava visinu tabele na 60% visine ekrana
+          scrollCollapse: true,
+          scrollX: true,
+          paging: true,
+          lengthChange: true,
+          searching: true,
+          info: true,
+          ordering: true,
+          autoWidth: false
+        });
+      });
+    }
+  });
+</script>
+
+</body>
+</html>

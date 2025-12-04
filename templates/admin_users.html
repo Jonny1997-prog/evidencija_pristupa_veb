@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card card-soft p-3">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <h6 class="mb-0">Korisnici i role</h6>
+      <small class="text-muted">Admin može da doda korisnike, promeni role i resetuje lozinke.</small>
+    </div>
+  </div>
+
+  <form method="post">
+    <div class="d-flex gap-2 align-items-center mb-2">
+      <label class="small fw-bold">Prikaži:</label>
+      <select id="statusFilter" class="form-select form-select-sm" style="width: 150px;">
+        <option value="">Svi korisnici</option>
+        <option value="Aktivan">Samo aktivni</option>
+        <option value="Neaktivan">Samo neaktivni</option>
+      </select>
+    </div>
+
+    <div class="mt-2">
+      <table class="table table-soft table-sm align-middle data-table-scroll" id="table_users" style="width:100%">
+        <thead>
+          <tr>
+            <th>Email</th>
+            <th>Ime i prezime</th>
+            <th>Rola</th>
+            <th>Aktivan</th>
+            <th>Nova lozinka (opciono)</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for u in users %}
+          <tr>
+            <td>{{ u.email }}</td>
+            <td>{{ u.full_name or "" }}</td>
+            <td>
+              <select name="role_{{ u.id }}" class="form-select form-select-sm">
+                <option value="employee" {% if u.role == 'employee' %}selected{% endif %}>Zaposleni</option>
+                <option value="portirnica" {% if u.role == 'portirnica' %}selected{% endif %}>Portirnica</option>
+                <option value="security_chief" {% if u.role == 'security_chief' %}selected{% endif %}>Šef obezbeđenja</option>
+                <option value="admin" {% if u.role == 'admin' %}selected{% endif %}>Admin</option>
+              </select>
+            </td>
+
+            <td class="text-center" data-search="{% if u.is_active %}Aktivan{% else %}Neaktivan{% endif %}">
+              <input type="checkbox" name="active_{{ u.id }}" {% if u.is_active %}checked{% endif %}>
+            </td>
+
+            <td>
+              <input type="password" name="password_{{ u.id }}" class="form-control form-control-sm" placeholder="Ostavite prazno ako ne menjate">
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <hr class="my-4">
+
+    <h6 class="mb-3 text-uppercase text-muted small fw-bold">
+      <i class="bi bi-person-plus-fill me-1"></i>Dodaj novog korisnika
+    </h6>
+    <div class="row g-2 align-items-end p-3 bg-light rounded border">
+      <div class="col-md-4">
+        <label class="form-label small mb-1">Email</label>
+        <input type="email" name="email_new" class="form-control form-control-sm" placeholder="email@logistar.rs">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label small mb-1">Ime i prezime</label>
+        <input type="text" name="full_name_new" class="form-control form-control-sm" placeholder="Ime Prezime">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label small mb-1">Lozinka</label>
+        <input type="password" name="password_new" class="form-control form-control-sm" placeholder="Lozinka">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label small mb-1">Rola</label>
+        <select name="role_new" class="form-select form-select-sm">
+          <option value="employee">Zaposleni</option>
+          <option value="portirnica">Portirnica</option>
+          <option value="security_chief">Šef obezbeđenja</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+      <div class="col-md-1">
+        <button type="submit" class="btn btn-primary btn-sm w-100">Sačuvaj</button>
+      </div>
+    </div>
+
+    <div class="mt-3 text-end">
+       <button type="submit" class="btn btn-outline-primary btn-sm">Sačuvaj izmene u tabeli</button>
+    </div>
+  </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Čekamo malo da se DataTable inicijalizuje iz base.html
+    setTimeout(function() {
+        if ($.fn.DataTable.isDataTable('#table_users')) {
+            var table = $('#table_users').DataTable();
+
+            // Kada se promeni vrednost u padajućem meniju
+            $('#statusFilter').on('change', function() {
+                var val = this.value; // "Aktivan", "Neaktivan" ili ""
+                // Kolona 3 je kolona "Aktivan" (broji se od 0: Email=0, Ime=1, Rola=2, Aktivan=3)
+                table.column(3).search(val ? '^' + val + '$' : '', true, false).draw();
+            });
+        }
+    }, 500); // 500ms kašnjenje da budemo sigurni da je tabela spremna
+});
+</script>
+
+{% endblock %}

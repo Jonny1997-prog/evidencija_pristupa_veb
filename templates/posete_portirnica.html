@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card card-soft p-3">
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <div>
+      <h6 class="mb-0">Najavljene posete za danas</h6>
+      <small class="text-muted">Vidljive su samo posete koje nemaju i ulaz i izlaz evidentiran.</small>
+    </div>
+  </div>
+  <div class="table-responsive mt-3">
+    <table class="table table-soft table-sm align-middle">
+      <thead>
+        <tr>
+          <th>Gost</th>
+          <th>Kod koga dolazi</th>
+          <th>Telefon</th>
+          <th>Objekat</th>
+          <th>Registracija</th>
+          <th>Najavljeno vreme</th>
+          <th>Napomena</th>
+          <th>Ulaz</th>
+          <th>Izlaz</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% if rows %}
+        {% for r in rows %}
+        <tr>
+          <td>{{ r['guest_name'] }}</td>
+          <td>{{ r['host_employee'] }}</td>
+          <td>{{ r.phone }}</td>
+          <td>{{ r['object_name'] }}</td>
+          <td>{{ r['vehicle_plate'] or '' }}</td>
+          <td>{{ r['expected_time'] or '' }}</td>
+
+          <td style="max-width: 200px;" class="text-truncate" title="{{ r['note'] }}">
+            {{ r['note'] or '' }}
+          </td>
+
+          <td>
+            {% if not r['entry_time'] %}
+              <form method="post" action="{{ url_for('evidentiraj_ulaz', visit_id=r['id']) }}">
+                <button type="submit" class="btn btn-success btn-sm">Evidentiraj ulaz</button>
+              </form>
+            {% else %}
+              <span class="badge bg-success-subtle text-success" style="border-radius:999px; border:1px solid rgba(34,197,94,0.4);">
+                {{ r['entry_time'] | date_sr }}
+              </span>
+            {% endif %}
+          </td>
+
+          <td>
+            {% if r['entry_time'] and not r['exit_time'] %}
+              <form method="post" action="{{ url_for('evidentiraj_izlaz', visit_id=r['id']) }}">
+                <button type="submit" class="btn btn-outline-secondary btn-sm">Evidentiraj izlaz</button>
+              </form>
+            {% elif r['exit_time'] %}
+              <span class="badge bg-secondary-subtle text-secondary" style="border-radius:999px; border:1px solid rgba(148,163,184,0.7);">
+                {{ r['exit_time'] | date_sr }}
+              </span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      {% else %}
+        <tr>
+          <td colspan="9" class="text-center text-muted py-4">Nema aktivnih poseta za danas.</td>
+        </tr>
+      {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,160 @@
+{% extends "base_minimal.html" %}
+{% block content %}
+
+<style>
+  :root {
+    --ls-red: #dc2626;
+    --ls-red-light: #ef4444;
+    --ls-red-glow: rgba(220, 38, 38, 0.64);
+  }
+
+  /* --- SMANJENO DUGME SA ANIMACIJOM --- */
+
+  .custom-btn {
+    width: 100%;
+    min-height: 45px; /* Smanjeno sa 60px */
+    display: inline-flex;
+    font-family: system-ui, -apple-system, sans-serif;
+    font-size: 16px; /* Smanjeno sa 22px */
+    align-items: center;
+    justify-content: center;
+    text-transform: uppercase;
+    text-align: center;
+    letter-spacing: 1px; /* Malo manji razmak */
+    font-weight: 700;
+    color: #ffffff;
+
+    background: var(--ls-red);
+    background: linear-gradient(90deg, var(--ls-red-light) 0%, var(--ls-red) 100%);
+
+    border: none;
+    border-radius: 50px; /* Zaobljenije */
+    box-shadow: 0px 5px 15px var(--ls-red-glow); /* Malo manja senka */
+    transition: all 0.3s ease-in-out 0s;
+    cursor: pointer;
+    outline: none;
+    position: relative;
+    padding: 0 20px; /* Horizontalni padding */
+    margin-top: 10px;
+  }
+
+  /* Efekat svetlećeg okvira (Before) */
+  .custom-btn::before {
+    content: '';
+    border-radius: 50px;
+    min-width: calc(100% + 8px); /* Tanji okvir */
+    min-height: calc(100% + 8px);
+    border: 2px solid var(--ls-red-light);
+    box-shadow: 0 0 40px var(--ls-red-glow);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    transition: all .3s ease-in-out 0s;
+    pointer-events: none;
+  }
+
+  /* Hover efekat */
+  .custom-btn:hover, .custom-btn:focus {
+    transform: translateY(-3px); /* Malo manje skakanje */
+    background: linear-gradient(90deg, var(--ls-red) 0%, var(--ls-red-light) 100%);
+    box-shadow: 0px 8px 20px var(--ls-red-glow);
+  }
+
+  .custom-btn:hover::before, .custom-btn:focus::before {
+    opacity: 1;
+  }
+
+  /* Pulsirajući prsten (After) - Smanjen */
+  .custom-btn::after {
+    content: '';
+    width: 20px;
+    height: 20px;
+    border-radius: 100%;
+    border: 4px solid var(--ls-red-light);
+    position: absolute;
+    z-index: -1;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    animation: ring 1.5s infinite;
+  }
+
+  .custom-btn:hover::after, .custom-btn:focus::after {
+    animation: none;
+    display: none;
+  }
+
+  @keyframes ring {
+    0% {
+      width: 20px;
+      height: 20px;
+      opacity: 1;
+    }
+    100% {
+      width: 200px; /* Smanjen domet prstena */
+      height: 200px;
+      opacity: 0;
+    }
+  }
+
+  /* --- Ostali stilovi --- */
+  .card-top-border {
+    border-top: 4px solid var(--ls-red);
+  }
+
+  .logo-circle {
+    background: var(--ls-red);
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 35px;
+    color: white;
+    font-weight: 700;
+    box-shadow: 0 5px 15px rgba(220, 38, 38, 0.3);
+  }
+</style>
+
+<div class="d-flex justify-content-center align-items-center" style="min-height:100vh; background-color: #f3f4f6;">
+  <div class="card shadow-lg p-4 card-top-border" style="max-width:420px; width:100%; border-radius:1rem;">
+
+    <div class="text-center mb-4">
+      <div class="mx-auto mb-3 logo-circle">
+        LS
+      </div>
+      <h4 class="fw-bold text-dark mb-1">LogiStar Evidencija</h4>
+      <p class="text-muted small">Prijavite se svojim poslovnim emailom</p>
+    </div>
+
+    {% if error %}
+    <div class="alert alert-danger py-2">{{ error }}</div>
+    {% endif %}
+
+    <form method="POST" class="d-grid gap-3">
+      <div>
+        <label class="form-label fw-semibold">Email</label>
+        <input type="email" name="email" class="form-control form-control-lg" placeholder="ime.prezime@logistar.rs" required>
+      </div>
+
+      <div>
+        <label class="form-label fw-semibold">Lozinka</label>
+        <input type="password" name="password" class="form-control form-control-lg" placeholder="••••••" required>
+      </div>
+
+      <button class="custom-btn">
+        Prijavi se
+      </button>
+    </form>
+
+    <div class="text-center mt-4 small">
+      <a href="#" class="text-decoration-none text-secondary">Zaboravljena lozinka?</a>
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}

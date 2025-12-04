@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="card card-soft p-3">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <h6 class="mb-0">Baza kamiona</h6>
+      <small class="text-muted">
+        Filtriraj po datumu, registraciji ili odredištu.
+      </small>
+    </div>
+    <div>
+      <a class="btn btn-sm btn-outline-success"
+         href="{{ url_for('security_kamioni_export',
+                          date_from=filters.date_from,
+                          date_to=filters.date_to,
+                          plate=filters.plate,
+                          destination=filters.destination) }}">
+        ⬇️ Export u Excel
+      </a>
+    </div>
+  </div>
+
+  <form method="get" class="row g-2 mb-4">
+    <div class="col-6 col-md-3">
+      <label class="form-label small mb-0">Datum od</label>
+      <input type="date" name="date_from" class="form-control form-control-sm"
+             value="{{ filters.date_from }}">
+    </div>
+    <div class="col-6 col-md-3">
+      <label class="form-label small mb-0">Datum do</label>
+      <input type="date" name="date_to" class="form-control form-control-sm"
+             value="{{ filters.date_to }}">
+    </div>
+    <div class="col-6 col-md-3">
+      <label class="form-label small mb-0">Registracija</label>
+      <input type="text" name="plate" class="form-control form-control-sm"
+             placeholder="Registracija" value="{{ filters.plate }}">
+    </div>
+    <div class="col-6 col-md-3">
+      <label class="form-label small mb-0">Odredište</label>
+      <input type="text" name="destination" class="form-control form-control-sm"
+             placeholder="Odredište" value="{{ filters.destination }}">
+    </div>
+    <div class="col-12 d-flex justify-content-end align-items-end mt-1">
+      <button type="submit" class="btn btn-primary btn-sm me-2">Primeni filter</button>
+      <a href="{{ url_for('security_kamioni') }}" class="btn btn-outline-secondary btn-sm">Poništi</a>
+    </div>
+  </form>
+
+  <div>
+    <table class="table table-soft table-sm align-middle data-table-scroll" id="table_kamioni" style="width:100%">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Vozač</th>
+          <th>Dok. vozača</th>
+          <th>Telefon</th>
+          <th>Suvozač</th>
+          <th>Dok. suv.</th>
+          <th>Registracija</th>
+          <th>Odredište</th>
+          <th>Datum</th>
+          <th>Vreme</th>
+          <th>Odlazak</th>
+          <th>Akcije</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in rows %}
+        <tr>
+          <td>{{ r.id }}</td>
+          <td>{{ r.driver_name }}</td>
+          <td>{{ r.driver_document }}</td>
+          <td>{{ r.driver_phone }}</td>
+          <td>{{ r.codriver_name }}</td>
+          <td>{{ r.codriver_document }}</td>
+          <td>{{ r.plate }}</td>
+          <td>{{ r.destination }}</td>
+
+          <td>{{ r.arrival_date | date_sr }}</td>
+
+          <td>{{ r.arrival_time }}</td>
+
+          <td>{{ r.departure_datetime | date_sr }}</td>
+
+          <td>
+            {% if session.get('role') == 'admin' %}
+            <div class="d-flex gap-1">
+              <a href="{{ url_for('security_kamioni_edit', truck_id=r.id) }}"
+                 class="btn btn-sm btn-outline-primary" title="Izmeni">✏</a>
+
+              <form method="post"
+                    action="{{ url_for('security_kamioni_delete', truck_id=r.id) }}"
+                    onsubmit="return confirm('Da li sigurno želiš da obrišeš ovaj kamion?');">
+                <button type="submit" class="btn btn-sm btn-outline-danger" title="Obriši">🗑</button>
+              </form>
+            </div>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

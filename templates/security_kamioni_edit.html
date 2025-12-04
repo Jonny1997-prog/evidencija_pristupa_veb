@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8 col-md-10">
+    <div class="card card-soft p-4">
+      <h5 class="mb-3">Izmena kamiona #{{ truck.id }}</h5>
+
+      <form method="post" class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">Vozač</label>
+          <input type="text" name="driver_name" class="form-control"
+                 value="{{ truck.driver_name }}" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Dokument vozača</label>
+          <input type="text" name="driver_document" class="form-control"
+                 value="{{ truck.driver_document }}">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Telefon vozača</label>
+          <input type="text" name="driver_phone" class="form-control"
+                 value="{{ truck.driver_phone }}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Registracija</label>
+          <input type="text" name="plate" class="form-control"
+                 value="{{ truck.plate }}" required>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Suvozač</label>
+          <input type="text" name="codriver_name" class="form-control"
+                 value="{{ truck.codriver_name }}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Dokument suvozača</label>
+          <input type="text" name="codriver_document" class="form-control"
+                 value="{{ truck.codriver_document }}">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Odredište</label>
+          <select name="destination" class="form-select" required>
+            {% for d in destinations %}
+              <option value="{{ d['value'] }}"
+                      {{ 'selected' if d['value'] == truck.destination else '' }}>
+                {{ d['value'] }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label">Datum dolaska</label>
+          <input type="date" name="arrival_date" class="form-control"
+                 value="{{ truck.arrival_date }}" required>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Vreme dolaska</label>
+          <input type="time" name="arrival_time" class="form-control"
+                 value="{{ truck.arrival_time }}" required>
+        </div>
+
+        <div class="col-md-12">
+          <label class="form-label">Datum/vreme odlaska</label>
+          <input type="text" name="departure_datetime" class="form-control"
+                 placeholder="YYYY-MM-DD HH:MM:SS"
+                 value="{{ truck.departure_datetime }}">
+        </div>
+
+        <div class="col-12 d-flex justify-content-end gap-2 mt-2">
+          <a href="{{ url_for('security_kamioni') }}" class="btn btn-light border">Nazad</a>
+          <button type="submit" class="btn btn-primary">Sačuvaj izmene</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

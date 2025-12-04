@@ -1,0 +1,269 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  :root {
+    /* CRVENA TEMA (Primary Action) */
+    --ls-red: #dc2626;
+    --ls-red-light: #ef4444;
+    --ls-red-glow: rgba(220, 38, 38, 0.5);
+
+    /* SIVA TEMA (Cancel) */
+    --ls-gray: #4b5563;
+    --ls-gray-light: #6b7280;
+    --ls-gray-glow: rgba(107, 114, 128, 0.5);
+
+    --ls-bg-icon: #fef2f2;
+  }
+
+  /* 1. STIL ZA IKONICE U NASLOVIMA */
+  .icon-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background-color: var(--ls-bg-icon);
+    color: var(--ls-red);
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(220, 38, 38, 0.15);
+    margin-right: 8px;
+    transition: transform 0.2s;
+  }
+
+  h6:hover .icon-badge {
+    transform: scale(1.1) rotate(5deg);
+  }
+
+  /* 2. ANIMIRANA DUGMAD (SMANJENA) */
+  .custom-btn {
+    min-width: 140px;
+    height: 38px;
+    display: inline-flex;
+    font-family: system-ui, -apple-system, sans-serif;
+    font-size: 13px;
+    align-items: center;
+    justify-content: center;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 700;
+    color: #ffffff;
+    border: none;
+    border-radius: 50px;
+    transition: all 0.3s ease-in-out;
+    cursor: pointer;
+    outline: none;
+    position: relative;
+    padding: 0 20px;
+    text-decoration: none;
+  }
+
+  .custom-btn::before {
+    content: '';
+    border-radius: 50px;
+    min-width: calc(100% + 4px);
+    min-height: calc(100% + 4px);
+    border: 2px solid transparent;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    transition: all .3s ease-in-out;
+    pointer-events: none;
+  }
+
+  .custom-btn:hover {
+    transform: translateY(-2px);
+    color: white;
+  }
+  .custom-btn:hover::before {
+    opacity: 1;
+  }
+
+  /* CRVENO DUGME (Evidentiraj ulaz) */
+  .btn-anim-red {
+    background: var(--ls-red);
+    background: linear-gradient(90deg, var(--ls-red-light) 0%, var(--ls-red) 100%);
+    box-shadow: 0px 4px 10px var(--ls-red-glow);
+  }
+  .btn-anim-red::before {
+    border-color: var(--ls-red-light);
+    box-shadow: 0 0 15px var(--ls-red-glow);
+  }
+  .btn-anim-red::after {
+    content: ''; width: 10px; height: 10px; border-radius: 100%; border: 2px solid var(--ls-red-light);
+    position: absolute; z-index: -1; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    animation: ring-red 1.5s infinite;
+  }
+  .btn-anim-red:hover::after { display: none; }
+
+  @keyframes ring-red {
+    0% { width: 10px; height: 10px; opacity: 1; }
+    100% { width: 150px; height: 150px; opacity: 0; }
+  }
+
+  /* SIVO DUGME (Otkaži) */
+  .btn-anim-gray {
+    background: var(--ls-gray);
+    background: linear-gradient(90deg, var(--ls-gray-light) 0%, var(--ls-gray) 100%);
+    box-shadow: 0px 4px 10px var(--ls-gray-glow);
+  }
+  .btn-anim-gray::before {
+    border-color: var(--ls-gray-light);
+    box-shadow: 0 0 15px var(--ls-gray-glow);
+  }
+  .btn-anim-gray::after {
+    content: ''; width: 10px; height: 10px; border-radius: 100%; border: 2px solid var(--ls-gray-light);
+    position: absolute; z-index: -1; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    animation: ring-gray 1.5s infinite;
+  }
+  .btn-anim-gray:hover::after { display: none; }
+
+  @keyframes ring-gray {
+    0% { width: 10px; height: 10px; opacity: 1; }
+    100% { width: 150px; height: 150px; opacity: 0; }
+  }
+</style>
+
+<div class="row justify-content-center">
+  <div class="col-lg-8 col-md-10">
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm mb-3" role="alert" style="border-radius: 15px;">
+            <i class="bi bi-info-circle-fill me-2"></i> {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <div class="card card-soft p-4 shadow-sm">
+
+      <div class="d-flex justify-content-between align-items-center mb-4">
+          <h4 class="mb-0 fw-bold">Poseta bez najave</h4>
+          <span class="badge bg-warning text-dark rounded-pill px-3 py-2">Portirnica / Direktan ulaz</span>
+      </div>
+
+      <form method="post">
+
+        <input type="hidden" name="arrival_date" id="auto_date">
+
+        <h6 class="text-uppercase text-muted small fw-bold mb-3 d-flex align-items-center">
+            <span class="icon-badge"><i class="bi bi-telephone-outbound"></i></span>
+            Kontakt domaćina i lokacija
+        </h6>
+        <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Kod koga dolazi (Domaćin) <span class="text-danger">*</span></label>
+              <select name="host_employee" class="form-select" required>
+                <option value="" disabled selected>Izaberite zaposlenog...</option>
+                {% for row in employees %}
+                  <option value="{{ row['value'] }}">{{ row['value'] }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Telefon domaćina (za proveru)</label>
+              <input type="text" name="phone" class="form-control" placeholder="Lokal ili mobilni zaposlenog">
+            </div>
+
+            <div class="col-12">
+              <label class="form-label">Objekat / Lokacija <span class="text-danger">*</span></label>
+              <select name="object_name" class="form-select" required>
+                <option value="" disabled selected>Izaberite objekat...</option>
+                {% for row in objects %}
+                  <option value="{{ row['value'] }}">{{ row['value'] }}</option>
+                {% endfor %}
+              </select>
+            </div>
+        </div>
+
+        <hr class="my-4 text-muted">
+
+        <h6 class="text-uppercase text-muted small fw-bold mb-3 d-flex align-items-center">
+            <span class="icon-badge"><i class="bi bi-person-exclamation"></i></span>
+            Identifikacija gosta
+        </h6>
+        <div class="row g-3">
+            <div class="col-md-8">
+              <label class="form-label">Ime i prezime gosta <span class="text-danger">*</span></label>
+              <input type="text" name="guest_name" class="form-control" placeholder="Ime i prezime sa dokumenta" required>
+            </div>
+
+            <div class="col-md-4">
+               <label class="form-label">Broj osoba</label>
+               <input type="number" name="persons_count" value="1" min="1" class="form-control">
+            </div>
+
+            <div class="col-12">
+              <label class="form-label">Broj ličnog dokumenta</label>
+              <input type="text" name="document_number" class="form-control" placeholder="L.K. ili Pasoš">
+            </div>
+        </div>
+
+        <hr class="my-4 text-muted">
+
+        <h6 class="text-uppercase text-muted small fw-bold mb-3 d-flex align-items-center">
+            <span class="icon-badge"><i class="bi bi-shield-check"></i></span>
+            Evidencija vozila i napomene
+        </h6>
+        <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Registracija vozila (opciono)</label>
+              <input type="text" name="vehicle_plate" class="form-control bg-light" placeholder="BG123XX">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Napomena</label>
+              <textarea name="note" class="form-control" rows="1" placeholder="Razlog posete, itd..."></textarea>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-end align-items-center gap-3 mt-5">
+          <a href="{{ url_for('index') }}" class="custom-btn btn-anim-gray">
+            Otkaži
+          </a>
+
+          <button type="submit" class="custom-btn btn-anim-red">
+            Evidentiraj ulaz
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+
+    // --- 1. AUTOMATSKI DATUM ---
+    var dateField = document.getElementById('auto_date');
+    if (dateField) {
+        var d = new Date();
+        var day = ("0" + d.getDate()).slice(-2);
+        var month = ("0" + (d.getMonth() + 1)).slice(-2);
+        var today = d.getFullYear() + "-" + month + "-" + day;
+        dateField.value = today;
+    }
+
+    // --- 2. VALIDACIJA REGISTRACIJE ---
+    var regInput = document.querySelector('input[name="vehicle_plate"]');
+    if(regInput) {
+        regInput.addEventListener('input', function() {
+            var start = this.selectionStart;
+            var end = this.selectionEnd;
+            var val = this.value.toUpperCase();
+            val = val.replace(/[^A-Z0-9ŠĐČĆŽ]/g, '');
+            this.value = val;
+            this.setSelectionRange(start, end);
+        });
+    }
+});
+</script>
+
+{% endblock %}

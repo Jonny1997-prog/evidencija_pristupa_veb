@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="card card-soft p-3">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <h6 class="mb-0">Baza poseta</h6>
+      <small class="text-muted">
+        Filtriraj po datumu, domaćinu, gostu ili objektu.
+      </small>
+    </div>
+    <div>
+      <a class="btn btn-sm btn-outline-success"
+         href="{{ url_for('security_posete_export',
+                          date_from=filters.date_from,
+                          date_to=filters.date_to,
+                          host=filters.host,
+                          object_name=filters.object_name,
+                          guest_name=filters.guest_name) }}">
+        ⬇️ Export u Excel
+      </a>
+    </div>
+  </div>
+
+  <form method="get" class="row g-2 mb-4">
+    <div class="col-6 col-md-3">
+      <label class="form-label small mb-0">Datum od</label>
+      <input type="date" name="date_from" class="form-control form-control-sm"
+             value="{{ filters.date_from }}">
+    </div>
+    <div class="col-6 col-md-3">
+      <label class="form-label small mb-0">Datum do</label>
+      <input type="date" name="date_to" class="form-control form-control-sm"
+             value="{{ filters.date_to }}">
+    </div>
+    <div class="col-6 col-md-2">
+      <label class="form-label small mb-0">Kod koga dolazi</label>
+      <input type="text" name="host" class="form-control form-control-sm"
+             placeholder="Ime domaćina" value="{{ filters.host }}">
+    </div>
+    <div class="col-6 col-md-2">
+      <label class="form-label small mb-0">Gost</label>
+      <input type="text" name="guest_name" class="form-control form-control-sm"
+             placeholder="Ime gosta" value="{{ filters.guest_name }}">
+    </div>
+    <div class="col-6 col-md-2">
+      <label class="form-label small mb-0">Objekat</label>
+      <input type="text" name="object_name" class="form-control form-control-sm"
+             placeholder="Objekat" value="{{ filters.object_name }}">
+    </div>
+    <div class="col-12 d-flex justify-content-end align-items-end mt-1">
+      <button type="submit" class="btn btn-primary btn-sm me-2">Primeni filter</button>
+      <a href="{{ url_for('security_posete') }}" class="btn btn-outline-secondary btn-sm">Poništi</a>
+    </div>
+  </form>
+
+  <div>
+    <table class="table table-soft table-sm align-middle data-table-scroll" id="table_posete" style="width:100%">
+      <thead>
+        <tr>
+          <th>Datum</th>
+          <th>Najavljeno</th>
+          <th>Kod koga dolazi</th>
+          <th>Gost</th>
+          <th>Objekat</th>
+          <th>Telefon</th>
+          <th>Dokument</th>
+          <th>Reg.</th>
+          <th>Osoba</th>
+          <th>Ulaz</th>
+          <th>Izlaz</th>
+          <th>Napomena</th>
+          <th>Akcije</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in rows %}
+        <tr>
+          <td>{{ r.arrival_date | date_sr }}</td>
+
+          <td>{{ r.expected_time or '' }}</td>
+
+          <td>{{ r.host_employee }}</td>
+          <td>{{ r.guest_name }}</td>
+          <td>{{ r.object_name }}</td>
+          <td>{{ r.phone }}</td>
+          <td>{{ r.document_number }}</td>
+          <td>{{ r.vehicle_plate }}</td>
+          <td>{{ r.persons_count }}</td>
+
+          <td>{{ r.entry_time | date_sr }}</td>
+          <td>{{ r.exit_time | date_sr }}</td>
+
+          <td>{{ r.note }}</td>
+
+          <td>
+            {% if session.get('role') == 'admin' %}
+            <div class="d-flex gap-1">
+              <a href="{{ url_for('security_posete_edit', visit_id=r.id) }}"
+                 class="btn btn-sm btn-outline-primary" title="Izmeni">✏</a>
+
+              <form method="post"
+                    action="{{ url_for('security_posete_delete', visit_id=r.id) }}"
+                    onsubmit="return confirm('Da li sigurno želiš da obrišeš ovu posetu?');">
+                <button type="submit" class="btn btn-sm btn-outline-danger" title="Obriši">🗑</button>
+              </form>
+            </div>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

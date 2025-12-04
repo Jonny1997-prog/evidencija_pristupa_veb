@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card card-soft p-3">
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <div>
+      <h6 class="mb-0">Podešavanje padajućih menija</h6>
+      <small class="text-muted">
+        Izaberi formu i polje, pa dodaj nove stavke koje će se pojaviti u padajućim menijima.
+      </small>
+    </div>
+  </div>
+
+  <!-- 1) Izbor forme -->
+  <div class="mb-3">
+    <label class="form-label small mb-1">Forma</label>
+    <div class="btn-group btn-group-sm" role="group">
+      {% for code, cfg in form_configs.items() %}
+      <a href="{{ url_for('admin_lookups', form=code) }}"
+         class="btn {% if code == form_code %}btn-primary{% else %}btn-outline-primary{% endif %}">
+        {{ cfg.label }}
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- 2) Izbor polja u toj formi -->
+  <div class="mb-3">
+    <label class="form-label small mb-1">Polje u formi</label>
+    {% if form_cfg.fields %}
+      <div class="btn-group btn-group-sm" role="group">
+        {% for f in form_cfg.fields %}
+        <a href="{{ url_for('admin_lookups', form=form_code, field=f.code) }}"
+           class="btn {% if field_code == f.code %}btn-secondary{% else %}btn-outline-secondary{% endif %}">
+          {{ f.label }}
+        </a>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="text-muted small mb-0">Za ovu formu trenutno nema polja koja koriste padajuće menije.</p>
+    {% endif %}
+  </div>
+
+  {% if field_code %}
+  <!-- 3) Lista postojećih vrednosti + dodavanje nove -->
+  <hr class="my-3">
+
+  <div class="row">
+    <div class="col-md-7">
+      <h6 class="mb-2">Postojeće vrednosti</h6>
+      <div class="table-responsive" style="max-height: 320px; overflow-y: auto;">
+        <table class="table table-soft table-sm align-middle">
+          <thead>
+            <tr>
+              <th style="width:60px;">ID</th>
+              <th>Vrednost</th>
+            </tr>
+          </thead>
+          <tbody>
+          {% if rows %}
+            {% for r in rows %}
+            <tr>
+              <td class="text-muted small">{{ r.id }}</td>
+              <td>{{ r.value }}</td>
+            </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="2" class="text-center text-muted py-3 small">Nema unetih vrednosti za ovo polje.</td>
+            </tr>
+          {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="col-md-5">
+      <h6 class="mb-2">Dodaj novu vrednost</h6>
+      <form method="post" class="row g-2">
+        <div class="col-12">
+          <input type="text" name="new_value" class="form-control form-control-sm" placeholder="Unesi novu vrednost" required>
+        </div>
+        <div class="col-12 d-flex justify-content-end">
+          <button type="submit" class="btn btn-primary btn-sm">Sačuvaj</button>
+        </div>
+      </form>
+      <p class="text-muted small mt-2 mb-0">
+        Nakon čuvanja, nova vrednost će odmah biti vidljiva u odgovarajućem padajućem meniju na formi.
+      </p>
+    </div>
+  </div>
+  {% else %}
+  <hr class="my-3">
+  <p class="text-muted small mb-0">
+    Izaberi polje u odabranoj formi.
+  </p>
+  {% endif %}
+</div>
+{% endblock %}
