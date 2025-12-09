@@ -16,6 +16,7 @@
           <th>Telefon</th>
           <th>Objekat</th>
           <th>Registracija</th>
+          <th class="text-center">Br. osoba</th>
           <th>Najavljeno vreme</th>
           <th>Napomena</th>
           <th>Ulaz</th>
@@ -31,6 +32,7 @@
           <td>{{ r.phone }}</td>
           <td>{{ r['object_name'] }}</td>
           <td>{{ r['vehicle_plate'] or '' }}</td>
+          <td class="text-center fw-bold">{{ r['persons_count'] or 1 }}</td>
           <td>{{ r['expected_time'] or '' }}</td>
 
           <td style="max-width: 200px;" class="text-truncate" title="{{ r['note'] }}">
@@ -64,7 +66,7 @@
         {% endfor %}
       {% else %}
         <tr>
-          <td colspan="9" class="text-center text-muted py-4">Nema aktivnih poseta za danas.</td>
+          <td colspan="10" class="text-center text-muted py-4">Nema aktivnih poseta za danas.</td>
         </tr>
       {% endif %}
       </tbody>

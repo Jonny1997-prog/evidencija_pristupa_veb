@@ -38,7 +38,7 @@ def import_lookups_from_excel(xlsx_path: str) -> None:
     conn = get_db()
     cur = conn.cursor()
 
-    # resetujemo postojeće vrednosti za ove tipove
+
     cur.execute("DELETE FROM lookups WHERE type IN ('employee', 'object', 'destination')")
 
     cur.executemany(

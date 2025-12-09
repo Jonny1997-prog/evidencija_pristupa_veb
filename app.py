@@ -26,7 +26,7 @@ app = Flask(__name__)
 
 @app.template_filter('date_sr')
 def date_sr_filter(value):
-    """Pretvara YYYY-MM-DD u DD.MM.YYYY."""
+
     if not value:
         return ''
     s = str(value)
@@ -70,7 +70,6 @@ FORM_LOOKUP_CONFIG = {
 # DB helperi
 
 def get_db():
-    """Create a SQLite connection with row_factory set to Row."""
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
@@ -121,11 +120,11 @@ def init_db() -> None:
     """
     )
 
-    # Ako baza već postoji bez ove kolone, pokušaj da je dodaš
+
     try:
         cur.execute("ALTER TABLE trucks ADD COLUMN driver_phone TEXT")
     except sqlite3.OperationalError:
-        # Kolona već postoji – ignorišemo grešku
+
         pass
 
 
@@ -208,7 +207,6 @@ def init_db() -> None:
 
 
 # Auth helperi i dekoratori
-
 
 def get_current_user():
     email = session.get("user_email")
@@ -327,18 +325,13 @@ def change_password():
             "SELECT * FROM users WHERE email=?", (email,)
         ).fetchone()
 
-        # ISPRAVKA 1: Koristimo 'password_hash' (ne 'password')
-        # ISPRAVKA 2: Koristimo check_password_hash funkciju
+
         if not user or not check_password_hash(user["password_hash"], old_pw):
             conn.close()
             return render_template("profile.html",
                                    error="Trenutna lozinka nije ispravna!")
 
-        # Snimi novu lozinku (HEŠIRANU)
-        # ISPRAVKA 3: Heširamo novu lozinku pre upisa
         new_pw_hash = generate_password_hash(new_pw)
-
-        # ISPRAVKA 4: Upisujemo u kolonu 'password_hash'
         cur.execute("UPDATE users SET password_hash=? WHERE email=?",
                     (new_pw_hash, email))
         conn.commit()
@@ -352,7 +345,6 @@ def change_password():
 
 
 # Admin – upravljanje korisnicima
-
 
 @app.route("/admin/users", methods=["GET", "POST"])
 @require_role("admin")
@@ -439,7 +431,6 @@ def index():
 
 # 1) Forma za najavu posete (zaposleni)
 
-
 @app.route("/posete/najava", methods=["GET", "POST"])
 @require_role("admin", "employee","security_chief")
 def posete_najava():
@@ -447,8 +438,8 @@ def posete_najava():
     cur = conn.cursor()
 
     if request.method == "POST":
-        arrival_date = request.form["arrival_date"]  # yyyy-mm-dd
-        expected_time = request.form["expected_time"]  # HH:MM
+        arrival_date = request.form["arrival_date"]
+        expected_time = request.form["expected_time"]
         host_employee = request.form["host_employee"]
         phone = request.form["phone"]
         object_name = request.form["object_name"]
@@ -508,12 +499,11 @@ def posete_najava():
 @app.route("/posete/nenajavljena", methods=["GET", "POST"])
 @require_role("admin", "portirnica", "security_chief")
 def posete_nenajavljena():
-    """Forma koju koristi portirnica kad gost nije bio najavljen."""
     conn = get_db()
     cur = conn.cursor()
 
     if request.method == "POST":
-        arrival_date = request.form["arrival_date"]  # yyyy-mm-dd
+        arrival_date = request.form["arrival_date"]
         host_employee = request.form["host_employee"]
         phone = request.form["phone"]
         object_name = request.form["object_name"]
@@ -549,7 +539,6 @@ def posete_nenajavljena():
         conn.commit()
         conn.close()
 
-        # 1. Prikazujemo zelenu poruku
         flash(f"Uspešno evidentiran ulaz za gosta: {guest_name}", "success")
 
         return redirect(url_for("posete_nenajavljena"))
@@ -639,7 +628,7 @@ def kamioni_unos():
         plate = request.form["plate"]
         destination = request.form["destination"]
 
-        # PROMENA: Automatsko generisanje vremena
+        #Automatsko generisanje vremena
         now = datetime.now()
         arrival_date = now.strftime("%Y-%m-%d")  # Format za bazu
         arrival_time = now.strftime("%H:%M")  # Format za bazu
@@ -726,8 +715,6 @@ def kamion_evidentiraj_izlaz(truck_id: int):
 def security_posete():
     conn = get_db()
     cur = conn.cursor()
-
-    # filter parametri iz query stringa
     date_from = request.args.get("date_from") or None
     date_to = request.args.get("date_to") or None
     host = (request.args.get("host") or "").strip()
@@ -813,7 +800,7 @@ def security_kamioni_export():
         "ID",
         "Vozač",
         "Dokument vozača",
-        "Telefon vozača",  # NOVO: telefon vozača
+        "Telefon vozača",
         "Suvozač",
         "Dokument suvozača",
         "Registracija",
@@ -854,7 +841,7 @@ def security_kamioni_export():
 
 
 @app.route("/security/kamioni/<int:truck_id>/edit", methods=["GET", "POST"])
-@require_role("admin")  # samo admin sme da menja podatke o kamionima
+@require_role("admin")
 def security_kamioni_edit(truck_id: int):
     conn = get_db()
     cur = conn.cursor()
@@ -1028,7 +1015,7 @@ def security_posete_export():
 
 
 @app.route("/security/posete/<int:visit_id>/edit", methods=["GET", "POST"])
-@require_role("admin")  # samo admin sme da menja podatke
+@require_role("admin")
 def security_posete_edit(visit_id: int):
     conn = get_db()
     cur = conn.cursor()
@@ -1119,7 +1106,6 @@ def security_posete_delete(visit_id: int):
     cur.execute("DELETE FROM visits WHERE id = ?", (visit_id,))
     conn.commit()
     conn.close()
-    # vraćamo se na prethodnu stranicu ili na bazu poseta
     return redirect(request.referrer or url_for("security_posete"))
 
 @app.route("/security/kamioni", methods=["GET"])
@@ -1170,11 +1156,9 @@ def security_kamioni():
 # Basic smoke tests
 
 def _run_basic_tests() -> None:
-    """Run a couple of simple smoke tests using Flask's test client."""
     init_db()
 
     with app.test_client() as client:
-        # login kao admin
         resp = client.post(
             "/login",
             data={"email": "nikola.lakovic@logistar.rs", "password": "1"},
