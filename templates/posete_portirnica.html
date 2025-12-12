@@ -35,9 +35,9 @@
           <td class="text-center fw-bold">{{ r['persons_count'] or 1 }}</td>
           <td>{{ r['expected_time'] or '' }}</td>
 
-          <td style="max-width: 200px;" class="text-truncate" title="{{ r['note'] }}">
-            {{ r['note'] or '' }}
-          </td>
+        <td style="max-width: 300px; white-space: normal; word-wrap: break-word;">
+          {{ r['note'] or '' }}
+        </td>
 
           <td>
             {% if not r['entry_time'] %}

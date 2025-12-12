@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="card card-soft p-3">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <h6 class="mb-0">Moje najave</h6>
+      <small class="text-muted">
+        Pregled poseta koje ste vi kreirali.
+      </small>
+    </div>
+  </div>
+
+  <form method="get" class="row g-2 mb-4 bg-light p-2 rounded border mx-1">
+    <div class="col-md-4 d-flex align-items-center gap-2">
+       <label class="small fw-bold mb-0">Od:</label>
+       <input type="date" name="date_from" class="form-control form-control-sm" value="{{ filters.date_from }}">
+    </div>
+    <div class="col-md-4 d-flex align-items-center gap-2">
+       <label class="small fw-bold mb-0">Do:</label>
+       <input type="date" name="date_to" class="form-control form-control-sm" value="{{ filters.date_to }}">
+    </div>
+    <div class="col-md-4 text-end">
+       <button type="submit" class="btn btn-primary btn-sm">Filtriraj</button>
+       <a href="{{ url_for('moje_najave') }}" class="btn btn-outline-secondary btn-sm">Poništi</a>
+    </div>
+  </form>
+
+  <div class="table-responsive">
+    <table class="table table-soft table-sm align-middle data-table-scroll" id="table_moje_najave" style="width:100%">
+      <thead>
+        <tr>
+          <th class="text-center">Status</th>
+          <th>Datum</th>
+          <th>Gost</th>
+          <th>Objekat</th>
+          <th>Registracija</th>
+          <th>Ulaz / Izlaz</th>
+          <th>Akcije</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in rows %}
+        <tr class="{% if r.status == 'cancelled' %}table-secondary text-muted{% endif %}">
+          
+          <td class="text-center">
+            {% if r.status == 'cancelled' %}
+               <span class="badge bg-secondary rounded-pill">OTKAZANO</span>
+            {% elif r.exit_time %}
+               <span class="badge bg-secondary rounded-pill">Završeno</span>
+            {% elif r.entry_time %}
+               <span class="badge bg-success rounded-pill">U objektu</span>
+            {% else %}
+               <span class="badge bg-primary rounded-pill">Aktivno</span>
+            {% endif %}
+          </td>
+
+          <td data-sort="{{ r.arrival_date }}">
+            {{ r.arrival_date | date_sr }}
+            <br>
+            <small class="text-muted">{{ r.expected_time }}</small>
+          </td>
+          
+          <td class="fw-bold">{{ r.guest_name }}</td>
+          <td>{{ r.object_name }}</td>
+          <td>{{ r.vehicle_plate or '' }}</td>
+          
+          <td>
+            {% if r.entry_time %}
+              <div class="small text-success">Ulaz: {{ r.entry_time | date_sr }}</div>
+            {% endif %}
+            {% if r.exit_time %}
+              <div class="small text-danger">Izlaz: {{ r.exit_time | date_sr }}</div>
+            {% endif %}
+            {% if not r.entry_time and not r.exit_time %} - {% endif %}
+          </td>
+
+          <td>
+            {% if r.status != 'cancelled' and not r.entry_time %}
+            <div class="d-flex gap-1">
+              
+              <button type="button" class="btn btn-sm btn-outline-primary" 
+                      data-bs-toggle="modal" 
+                      data-bs-target="#modalDate{{ r.id }}" 
+                      title="Promeni datum">
+                ✏️
+              </button>
+
+              <button type="button" class="btn btn-sm btn-outline-danger" 
+                      data-bs-toggle="modal" 
+                      data-bs-target="#modalCancel{{ r.id }}" 
+                      title="Otkaži posetu">
+                ❌
+              </button>
+            </div>
+
+            <div class="modal fade" id="modalDate{{ r.id }}" tabindex="-1" aria-hidden="true">
+              <div class="modal-dialog modal-sm modal-dialog-centered">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h6 class="modal-title">Promena datuma</h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <form action="{{ url_for('moje_najave_promeni_datum', visit_id=r.id) }}" method="post">
+                    <div class="modal-body text-start">
+                      <label class="form-label small">Izaberite novi datum:</label>
+                      <input type="date" name="new_date" class="form-control" value="{{ r.arrival_date }}" required>
+                    </div>
+                    <div class="modal-footer p-1">
+                      <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Nazad</button>
+                      <button type="submit" class="btn btn-primary btn-sm">Sačuvaj</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+
+            <div class="modal fade" id="modalCancel{{ r.id }}" tabindex="-1" aria-hidden="true">
+              <div class="modal-dialog modal-sm modal-dialog-centered">
+                <div class="modal-content">
+                  <div class="modal-header bg-danger text-white">
+                    <h6 class="modal-title">Potvrda otkazivanja</h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <div class="modal-body text-center text-wrap">
+                    <p class="mb-0">Da li sigurno želite da otkažete ovu posetu?</p>
+                    <p class="fw-bold mt-1">{{ r.guest_name }}</p>
+                  </div>
+                  <div class="modal-footer p-1 justify-content-center">
+                    <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Ne</button>
+                    <form action="{{ url_for('moje_najave_otkazi', visit_id=r.id) }}" method="post" style="display:inline;">
+                       <button type="submit" class="btn btn-danger btn-sm">Da, otkaži</button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Čekamo malo da se učita biblioteka
+    setTimeout(function() {
+        if (window.jQuery && $.fn.DataTable && !$.fn.DataTable.isDataTable('#table_moje_najave')) {
+            $('#table_moje_najave').DataTable({
+                language: { url: "https://cdn.datatables.net/plug-ins/1.13.6/i18n/sr-SP.json" },
+                pageLength: 25,
+                ordering: false,
+                scrollX: true
+            });
+        }
+    }, 500);
+});
+</script>
+
+{% endblock %}

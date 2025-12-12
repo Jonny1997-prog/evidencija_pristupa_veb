@@ -432,8 +432,9 @@ def index():
 # 1) Forma za najavu posete (zaposleni)
 
 @app.route("/posete/najava", methods=["GET", "POST"])
-@require_role("admin", "employee","security_chief")
+@require_role("admin", "employee", "security_chief")
 def posete_najava():
+    # OVE DVE LINIJE SU BILE KLJUČNE - moraju biti na početku funkcije
     conn = get_db()
     cur = conn.cursor()
 
@@ -449,15 +450,19 @@ def posete_najava():
         note = request.form["note"]
         persons_count = request.form.get("persons_count") or None
 
+        # NOVO: Uzimamo email korisnika iz sesije
+        created_by = session.get("user_email")
+
         cur.execute(
             """
             INSERT INTO visits (
-                arrival_date, expected_time, host_employee, phone, object_name,
+                created_by, arrival_date, expected_time, host_employee, phone, object_name,
                 guest_name, document_number, vehicle_plate, note, persons_count
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
+                created_by,
                 arrival_date,
                 expected_time,
                 host_employee,
@@ -476,6 +481,7 @@ def posete_najava():
         flash(f"Uspešno sačuvana najava za gosta: {guest_name}", "success")
         return redirect(url_for("posete_najava"))
 
+    # GET zahtev - učitavanje podataka za formu
     employees = cur.execute(
         "SELECT value FROM lookups WHERE type='employee' ORDER BY value"
     ).fetchall()
@@ -490,7 +496,6 @@ def posete_najava():
         objects=objects,
         date_today=date.today().strftime("%d.%m.%Y."),
     )
-
 
 
 # 1b) Poseta bez najave – portirnica ručno unosi gosta
@@ -514,16 +519,20 @@ def posete_nenajavljena():
         persons_count = request.form.get("persons_count") or None
         now = datetime.now().isoformat(sep=" ", timespec="seconds")
 
+
+        created_by = session.get("user_email")
+
         cur.execute(
             """
             INSERT INTO visits (
-                arrival_date, expected_time, host_employee, phone, object_name,
+                created_by, arrival_date, expected_time, host_employee, phone, object_name,
                 guest_name, document_number, vehicle_plate, note, persons_count,
                 entry_time
             )
-            VALUES (?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
+                created_by,  # <--- Dodato
                 arrival_date,
                 host_employee,
                 phone,
@@ -567,11 +576,14 @@ def posete_portirnica():
     today_str = date.today().isoformat()
     conn = get_db()
     cur = conn.cursor()
+
+
     rows = cur.execute(
         """
         SELECT * FROM visits
         WHERE arrival_date = ?
           AND NOT (entry_time IS NOT NULL AND exit_time IS NOT NULL)
+          AND (status IS NULL OR status != 'cancelled')
         ORDER BY expected_time
         """,
         (today_str,),
@@ -633,15 +645,19 @@ def kamioni_unos():
         arrival_date = now.strftime("%Y-%m-%d")  # Format za bazu
         arrival_time = now.strftime("%H:%M")  # Format za bazu
 
+
+        created_by = session.get("user_email")
+
         cur.execute(
             """
             INSERT INTO trucks (
-                driver_name, driver_document, codriver_name, codriver_document,
+                created_by, driver_name, driver_document, codriver_name, codriver_document,
                 driver_phone, plate, destination, arrival_date, arrival_time
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
+                created_by,  # <--- Dodato
                 driver_name,
                 driver_document,
                 codriver_name,
@@ -1152,6 +1168,115 @@ def security_kamioni():
         },
         date_today=date.today().strftime("%d.%m.%Y."),
     )
+
+
+@app.route("/moje-najave")
+@require_role("admin", "employee", "portirnica", "security_chief")
+def moje_najave():
+    user_email = session.get("user_email")
+    if not user_email:
+        return redirect(url_for("login"))
+
+    conn = get_db()
+    cur = conn.cursor()
+    date_from = request.args.get("date_from")
+    date_to = request.args.get("date_to")
+    query = "SELECT * FROM visits WHERE created_by = ?"
+    params = [user_email]
+
+    if date_from:
+        query += " AND arrival_date >= ?"
+        params.append(date_from)
+    if date_to:
+        query += " AND arrival_date <= ?"
+        params.append(date_to)
+
+    query += """
+        ORDER BY 
+            CASE WHEN exit_time IS NULL THEN 0 ELSE 1 END, 
+            arrival_date DESC, 
+            expected_time DESC
+    """
+
+    rows = cur.execute(query, params).fetchall()
+    conn.close()
+
+    return render_template(
+        "moje_najave.html",
+        rows=rows,
+        filters={"date_from": date_from or "", "date_to": date_to or ""},
+        date_today=date.today().strftime("%d.%m.%Y."),
+        page_title="Moje najave"
+    )
+
+
+@app.route("/moje-najave/otkazi/<int:visit_id>", methods=["POST"])
+@require_role("admin", "employee", "portirnica", "security_chief")
+def moje_najave_otkazi(visit_id):
+    # Provera da li je to poseta ulogovanog korisnika (ili admina)
+    user_email = session.get("user_email")
+    role = session.get("role")
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    # Proveravamo vlasnistvo
+    visit = cur.execute("SELECT created_by FROM visits WHERE id = ?", (visit_id,)).fetchone()
+
+    if not visit:
+        conn.close()
+        flash("Poseta ne postoji.", "danger")
+        return redirect(url_for("moje_najave"))
+
+    # Samo kreator ili admin moze da otkaze
+    if visit["created_by"] != user_email and role != "admin":
+        conn.close()
+        flash("Nemate pravo da otkažete ovu posetu.", "danger")
+        return redirect(url_for("moje_najave"))
+
+    # Postavljanje statusa na cancelled
+    # Ako niste dodali kolonu 'status' u bazu, javite da promenim kod!
+    cur.execute("UPDATE visits SET status = 'cancelled' WHERE id = ?", (visit_id,))
+    conn.commit()
+    conn.close()
+
+    flash("Poseta uspešno otkazana.", "success")
+    return redirect(url_for("moje_najave"))
+
+
+@app.route("/moje-najave/promeni-datum/<int:visit_id>", methods=["POST"])
+@require_role("admin", "employee", "portirnica", "security_chief")
+def moje_najave_promeni_datum(visit_id):
+    user_email = session.get("user_email")
+    role = session.get("role")
+    new_date = request.form.get("new_date")
+
+    if not new_date:
+        flash("Morate izabrati novi datum.", "warning")
+        return redirect(url_for("moje_najave"))
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    visit = cur.execute("SELECT created_by FROM visits WHERE id = ?", (visit_id,)).fetchone()
+
+    if not visit:
+        conn.close()
+        flash("Poseta ne postoji.", "danger")
+        return redirect(url_for("moje_najave"))
+
+    if visit["created_by"] != user_email and role != "admin":
+        conn.close()
+        flash("Nemate pravo izmene.", "danger")
+        return redirect(url_for("moje_najave"))
+
+    cur.execute("UPDATE visits SET arrival_date = ? WHERE id = ?", (new_date, visit_id))
+    conn.commit()
+    conn.close()
+
+    flash(f"Datum posete uspešno promenjen na {new_date}.", "success")
+    return redirect(url_for("moje_najave"))
+
 
 # Basic smoke tests
 

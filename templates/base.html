@@ -157,6 +157,14 @@
          class="nav-link {% if request.endpoint == 'posete_najava' %}active{% endif %}">
         <span>📝</span><span>Najava posete</span>
       </a>
+        <a href="{{ url_for('moje_najave') }}"
+         class="nav-link {% if request.endpoint == 'moje_najave' %}active{% endif %}">
+        <span>📂</span><span>Moje najave</span>
+      </a>
+      {% endif %}
+
+      {% if role in ['admin', 'portirnica', 'security_chief'] %}
+
       {% endif %}
 
       {% if role in ['admin', 'portirnica', 'security_chief'] %}
