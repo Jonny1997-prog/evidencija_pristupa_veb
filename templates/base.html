@@ -68,6 +68,14 @@
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     }
 
+    .sidebar-toggle-icon {
+      display: inline-block;
+      width: 20px;
+      text-align: center;
+      font-style: normal;
+      font-weight: bold;
+      transition: transform 0.3s ease;
+    }
     .app-sidebar .brand { font-size: 1.25rem; font-weight: 600; letter-spacing: 0.03em; }
     .app-sidebar .nav-link { color: #9ca3af; border-radius: 0.5rem; padding: 0.55rem 0.9rem; font-size: 0.95rem; display: flex; align-items: center; gap: .5rem; transition: background 0.15s ease, color 0.15s ease; }
     .app-sidebar .nav-link:hover { background: rgba(31, 41, 55, 0.95); color: #f9fafb; }
@@ -81,15 +89,58 @@
     .table-soft tbody tr:nth-child(even) { background: var(--ls-gray-light); }
     .table-soft tbody tr:hover { background: var(--ls-red-soft) !important; }
 
-    @media (max-width: 767.98px) {
-      .app-sidebar {
-        position: fixed;
-        left: 0; top: 0; bottom: 0; z-index: 1040;
-        margin-left: calc(var(--sidebar-width) * -1);
-      }
-      body.sidebar-open .app-sidebar { margin-left: 0; }
-      body.sidebar-collapsed .app-sidebar { margin-left: calc(var(--sidebar-width) * -1); }
-    }
+/* Univerzalni kontejner za dugmad u dnu formi */
+.form-actions {
+  display: flex;
+  flex-wrap: wrap; /* Omogućava prelazak u novi red ako nema mesta */
+  gap: 1rem;       /* Razmak između dugmadi */
+  margin-top: 1.5rem;
+}
+
+.form-actions .btn {
+  flex: 1;         /* Dugmad će deliti prostor podjednako */
+  min-width: 120px; /* Ali neće ići ispod ove širine */
+  white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  .form-actions .btn {
+    flex: 1 1 100%; /* Na baš malim ekranima, dugme zauzima ceo red */
+  }
+}
+
+@media (max-width: 767.98px) {
+  .app-sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    z-index: 1050;
+    margin-left: calc(var(--sidebar-width) * -1); /* Početno sakriven */
+    transition: margin-left 0.3s ease-in-out;
+  }
+
+  /* Kada je meni otvoren na mobilnom */
+  body.sidebar-open .app-sidebar {
+    margin-left: 0;
+  }
+
+  /* Overlay (zatamnjenje) koji se pojavljuje iza menija */
+  .sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1040;
+    backdrop-filter: blur(2px);
+  }
+
+  body.sidebar-open .sidebar-overlay {
+    display: block;
+  }
+}
+
+
 
     .sidebar-toggle-btn { border-radius: 999px; border: 1px solid rgba(148, 163, 184, 0.8); background: #ffffff; color: #111827; padding: 0.25rem 0.5rem; }
     .sidebar-toggle-btn:hover { background: #e5e7eb; }
@@ -231,8 +282,8 @@
   <main class="app-main d-flex flex-column">
     <header class="app-header px-4 py-3 d-flex align-items-center justify-content-between">
       <div class="d-flex align-items-center gap-2">
-        <button type="button" class="sidebar-toggle-btn" onclick="toggleSidebar()" title="Prikaži/sakrij meni">
-          <span class="sidebar-toggle-icon">☰</span>
+        <button type="button" class="sidebar-toggle-btn" onclick="toggleSidebar()" title="Prikaži/sakrij meni" id="sidebarToggle">
+            <span class="sidebar-toggle-icon">☰</span>
         </button>
         <div class="page-title">{{ page_title or "LogiStar Evidencija" }}</div>
       </div>
@@ -302,10 +353,34 @@
     }, 350);
   }
 
-  function toggleSidebar() {
-    document.body.classList.toggle('sidebar-collapsed');
+function toggleSidebar() {
+  const isMobile = window.innerWidth < 768;
+  const body = document.body;
+  const icon = document.querySelector('#sidebarToggle .sidebar-toggle-icon');
+
+  if (isMobile) {
+    body.classList.toggle('sidebar-open');
+    body.classList.remove('sidebar-collapsed');
+  } else {
+    body.classList.toggle('sidebar-collapsed');
+    body.classList.remove('sidebar-open');
+  }
+
+
+  const isOpen = isMobile ? body.classList.contains('sidebar-open') : !body.classList.contains('sidebar-collapsed');
+
+  if (isOpen) {
+    icon.textContent = '✕';
+    icon.style.transform = 'rotate(90deg)';
+  } else {
+    icon.textContent = '☰';
+    icon.style.transform = 'rotate(0deg)';
+  }
+
+  if (typeof adjustDataTablesColumns === "function") {
     adjustDataTablesColumns();
   }
+}
 
   document.addEventListener('DOMContentLoaded', function () {
     if (!(window.jQuery && $.fn.DataTable)) {
@@ -352,6 +427,14 @@
       });
     }
   });
+
+window.addEventListener('resize', function() {
+  if (window.innerWidth >= 768) {
+    document.body.classList.remove('sidebar-open');
+    const icon = document.querySelector('#sidebarToggle .sidebar-toggle-icon');
+    if(icon) icon.textContent = '☰';
+  }
+});
 </script>
 
 </body>

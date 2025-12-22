@@ -31,14 +31,14 @@ def date_sr_filter(value):
         return ''
     s = str(value)
 
-    # Slučaj 1: Samo datum (2025-12-03)
+    #  1: Samo datum (2025-12-03)
     if len(s) == 10 and s[4] == '-' and s[7] == '-':
         return f"{s[8:10]}.{s[5:7]}.{s[0:4]}."
 
-    # Slučaj 2: Datum i vreme (2025-12-03 14:30:00) - prikazujemo datum i vreme
+    #  2: Datum i vreme (2025-12-03 14:30:00)
     if len(s) >= 16 and s[4] == '-' and s[10] == ' ':
         date_part = f"{s[8:10]}.{s[5:7]}.{s[0:4]}."
-        time_part = s[11:16]  # uzimamo samo HH:MM
+        time_part = s[11:16]
         return f"{date_part} {time_part}"
 
     return s
@@ -110,7 +110,7 @@ def init_db() -> None:
         driver_document         TEXT,
         codriver_name           TEXT,
         codriver_document       TEXT,
-        driver_phone            TEXT,         -- NOVO: telefon vozača
+        driver_phone            TEXT,         
         plate                   TEXT NOT NULL,
         destination             TEXT NOT NULL,
         arrival_date            TEXT NOT NULL,
@@ -434,7 +434,6 @@ def index():
 @app.route("/posete/najava", methods=["GET", "POST"])
 @require_role("admin", "employee", "security_chief")
 def posete_najava():
-    # OVE DVE LINIJE SU BILE KLJUČNE - moraju biti na početku funkcije
     conn = get_db()
     cur = conn.cursor()
 
@@ -449,8 +448,6 @@ def posete_najava():
         vehicle_plate = request.form["vehicle_plate"]
         note = request.form["note"]
         persons_count = request.form.get("persons_count") or None
-
-        # NOVO: Uzimamo email korisnika iz sesije
         created_by = session.get("user_email")
 
         cur.execute(
@@ -532,7 +529,7 @@ def posete_nenajavljena():
             VALUES (?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
-                created_by,  # <--- Dodato
+                created_by,
                 arrival_date,
                 host_employee,
                 phone,
@@ -657,7 +654,7 @@ def kamioni_unos():
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
-                created_by,  # <--- Dodato
+                created_by,
                 driver_name,
                 driver_document,
                 codriver_name,
@@ -1235,7 +1232,6 @@ def moje_najave_otkazi(visit_id):
         return redirect(url_for("moje_najave"))
 
     # Postavljanje statusa na cancelled
-    # Ako niste dodali kolonu 'status' u bazu, javite da promenim kod!
     cur.execute("UPDATE visits SET status = 'cancelled' WHERE id = ?", (visit_id,))
     conn.commit()
     conn.close()

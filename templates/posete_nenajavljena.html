@@ -124,6 +124,21 @@
     0% { width: 10px; height: 10px; opacity: 1; }
     100% { width: 150px; height: 150px; opacity: 0; }
   }
+
+
+    @media (max-width: 576px) {
+  /* Na malim ekranima dugmad idu jedno ispod drugog i šire se 100% */
+  .custom-btn {
+    width: 100%;
+    min-width: 100%;
+    margin: 0;
+  }
+
+  /* Smanjujemo razmak da ne bi bilo preveliko između njih */
+  .d-flex.flex-wrap {
+    gap: 12px !important;
+  }
+}
 </style>
 
 <div class="row justify-content-center">
@@ -223,7 +238,7 @@
             </div>
         </div>
 
-        <div class="d-flex justify-content-end align-items-center gap-3 mt-5">
+        <div class="d-flex flex-wrap justify-content-center justify-content-md-end align-items-center gap-3 mt-5">
           <a href="{{ url_for('index') }}" class="custom-btn btn-anim-gray">
             Otkaži
           </a>

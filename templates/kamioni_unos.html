@@ -124,6 +124,21 @@
     0% { width: 10px; height: 10px; opacity: 1; }
     100% { width: 150px; height: 150px; opacity: 0; }
   }
+
+  /* Univerzalno rešenje za dugmad na mobilnom */
+@media (max-width: 576px) {
+  .custom-btn {
+    width: 100% !important;
+    min-width: 100% !important;
+    margin: 0;
+  }
+
+  /* Razmak između naslaganih dugmadi */
+  .d-flex.flex-wrap {
+    gap: 12px !important;
+  }
+}
+
 </style>
 
 <div class="row justify-content-center">
@@ -208,15 +223,15 @@
             </div>
         </div>
 
-        <div class="d-flex justify-content-end align-items-center gap-3 mt-5">
-          <a href="{{ url_for('index') }}" class="custom-btn btn-anim-gray">
-            Otkaži
-          </a>
+    <div class="d-flex flex-wrap justify-content-center justify-content-md-end align-items-center gap-3 mt-5">
+      <a href="{{ url_for('index') }}" class="custom-btn btn-anim-gray">
+        Otkaži
+      </a>
 
-          <button type="submit" class="custom-btn btn-anim-red">
-            Sačuvaj kamion
-          </button>
-        </div>
+      <button type="submit" class="custom-btn btn-anim-red">
+        Sačuvaj kamion
+      </button>
+    </div>
 
       </form>
     </div>
