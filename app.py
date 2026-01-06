@@ -10,7 +10,7 @@ from flask import (
     flash,
 )
 import sqlite3
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 import io
 from openpyxl import Workbook
 
@@ -438,7 +438,8 @@ def posete_najava():
     cur = conn.cursor()
 
     if request.method == "POST":
-        arrival_date = request.form["arrival_date"]
+        # Zajednički podaci
+        arrival_date_str = request.form["arrival_date"]
         expected_time = request.form["expected_time"]
         host_employee = request.form["host_employee"]
         phone = request.form["phone"]
@@ -450,35 +451,95 @@ def posete_najava():
         persons_count = request.form.get("persons_count") or None
         created_by = session.get("user_email")
 
-        cur.execute(
-            """
-            INSERT INTO visits (
-                created_by, arrival_date, expected_time, host_employee, phone, object_name,
-                guest_name, document_number, vehicle_plate, note, persons_count
-            )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """,
-            (
-                created_by,
-                arrival_date,
-                expected_time,
-                host_employee,
-                phone,
-                object_name,
-                guest_name,
-                document_number,
-                vehicle_plate,
-                note,
-                persons_count,
-            ),
-        )
-        conn.commit()
-        conn.close()
+        # Provera moda: single ili recurring
+        visit_mode = request.form.get("visit_mode", "single")
 
-        flash(f"Uspešno sačuvana najava za gosta: {guest_name}", "success")
+        visits_to_create = []
+
+        if visit_mode == "recurring":
+            date_end_str = request.form.get("date_end")
+            # Dani u nedelji koji su čekirani (0=Pon, 1=Uto... 6=Ned)
+            allowed_days = request.form.getlist("days")
+            allowed_days = [int(d) for d in allowed_days]  # konverzija u int
+
+            if not date_end_str:
+                flash("Morate uneti krajnji datum za ponavljanje.", "danger")
+                return redirect(url_for("posete_najava"))
+
+            # Konverzija stringova u datum objekte
+            start_date = datetime.strptime(arrival_date_str, "%Y-%m-%d").date()
+            end_date = datetime.strptime(date_end_str, "%Y-%m-%d").date()
+
+            if end_date < start_date:
+                flash("Krajnji datum ne može biti pre početnog.", "danger")
+                return redirect(url_for("posete_najava"))
+
+            # Zaštita od prevelikog broja unosa (max 365 dana)
+            if (end_date - start_date).days > 365:
+                flash("Period ponavljanja ne može biti duži od godinu dana.", "danger")
+                return redirect(url_for("posete_najava"))
+
+            # PETLJA: Idemo dan po dan
+            current_date = start_date
+            while current_date <= end_date:
+                # current_date.weekday() vraća 0 za Ponedeljak, 6 za Nedelju
+                if current_date.weekday() in allowed_days:
+                    visits_to_create.append(current_date.strftime("%Y-%m-%d"))
+
+                current_date += timedelta(days=1)
+
+            if not visits_to_create:
+                flash("Nije izabran nijedan validan datum u zadatom periodu.", "warning")
+                return redirect(url_for("posete_najava"))
+
+        else:
+            # Samo jedan datum (obična najava)
+            visits_to_create.append(arrival_date_str)
+
+        # UPIS U BAZU (Sve pripremljene datume upisujemo)
+        try:
+            count = 0
+            for date_val in visits_to_create:
+                cur.execute(
+                    """
+                    INSERT INTO visits (
+                        created_by, arrival_date, expected_time, host_employee, phone, object_name,
+                        guest_name, document_number, vehicle_plate, note, persons_count
+                    )
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        created_by,
+                        date_val,
+                        expected_time,
+                        host_employee,
+                        phone,
+                        object_name,
+                        guest_name,
+                        document_number,
+                        vehicle_plate,
+                        note,
+                        persons_count,
+                    ),
+                )
+                count += 1
+
+            conn.commit()
+
+            if count > 1:
+                flash(f"Uspešno kreirano {count} poseta za gosta: {guest_name} (Period).", "success")
+            else:
+                flash(f"Uspešno sačuvana najava za gosta: {guest_name}", "success")
+
+        except Exception as e:
+            conn.rollback()
+            flash(f"Došlo je do greške prilikom upisa: {str(e)}", "danger")
+        finally:
+            conn.close()
+
         return redirect(url_for("posete_najava"))
 
-    # GET zahtev - učitavanje podataka za formu
+    # GET deo ostaje isti
     employees = cur.execute(
         "SELECT value FROM lookups WHERE type='employee' ORDER BY value"
     ).fetchall()
@@ -493,7 +554,6 @@ def posete_najava():
         objects=objects,
         date_today=date.today().strftime("%d.%m.%Y."),
     )
-
 
 # 1b) Poseta bez najave – portirnica ručno unosi gosta
 

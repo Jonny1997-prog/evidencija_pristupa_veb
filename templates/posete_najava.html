@@ -3,16 +3,12 @@
 
 <style>
   :root {
-    /* CRVENA TEMA (Save) */
+    /* Tvoje postojeće varijable */
     --ls-red: #dc2626;
     --ls-red-light: #ef4444;
     --ls-red-glow: rgba(220, 38, 38, 0.5);
-
-    /* SIVA TEMA (Cancel) */
     --ls-gray: #4b5563;
     --ls-gray-light: #6b7280;
-    --ls-gray-glow: rgba(107, 114, 128, 0.5);
-
     --ls-bg-icon: #fef2f2;
   }
 
@@ -30,12 +26,50 @@
     margin-right: 8px;
     transition: transform 0.2s;
   }
-
   h6:hover .icon-badge {
     transform: scale(1.1) rotate(5deg);
   }
 
-  /* 2. GLAVNA KLASA ZA ANIMIRANA DUGMAD (SMANJENA) */
+  /* 2. CUSTOM RADIO DUGMAD (CRVENA) */
+  .form-check-input:checked {
+    background-color: var(--ls-red) !important;
+    border-color: var(--ls-red) !important;
+  }
+  .form-check-input:focus {
+    box-shadow: 0 0 0 0.25rem rgba(220, 38, 38, 0.25);
+    border-color: var(--ls-red-light);
+  }
+
+  /* 3. DUGMAD ZA DANE (SIVO -> CRVENO) */
+  .btn-check-red + .btn {
+      color: var(--ls-gray);
+      border-color: #d1d5db; /* Svetlo siva ivica */
+      background-color: white;
+  }
+  .btn-check-red + .btn:hover {
+      border-color: var(--ls-red-light);
+      color: var(--ls-red);
+  }
+  /* Kada je čekirano */
+  .btn-check-red:checked + .btn {
+      background-color: var(--ls-red) !important;
+      border-color: var(--ls-red) !important;
+      color: white !important;
+      box-shadow: 0 4px 6px rgba(220, 38, 38, 0.2);
+  }
+
+  /* 4. KONTEJNER ZA PONAVLJANJE */
+  .recurrence-box {
+      display: none; /* Skriveno po defaultu */
+      background-color: #fff1f2; /* Veoma svetlo crvena */
+      border: 2px solid var(--ls-red); /* Jaka crvena ivica */
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 15px;
+      box-shadow: 0 4px 15px rgba(220, 38, 38, 0.1);
+  }
+
+  /* 5. GLAVNA DUGMAD (SAČUVAJ/OTKAŽI) - Zadržano tvoje */
   .custom-btn {
     min-width: 140px;
     height: 38px;
@@ -52,118 +86,39 @@
     border-radius: 50px;
     transition: all 0.3s ease-in-out;
     cursor: pointer;
-    outline: none;
+    text-decoration: none;
     position: relative;
     padding: 0 20px;
-    text-decoration: none;
   }
+  .custom-btn:hover { transform: translateY(-2px); color: white; }
 
-  .custom-btn::before {
-    content: '';
-    border-radius: 50px;
-    min-width: calc(100% + 4px);
-    min-height: calc(100% + 4px);
-    border: 2px solid transparent;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    opacity: 0;
-    transition: all .3s ease-in-out;
-    pointer-events: none;
-  }
-
-  .custom-btn:hover {
-    transform: translateY(-2px);
-    color: white;
-  }
-  .custom-btn:hover::before {
-    opacity: 1;
-  }
-
-  /* --- VARIJACIJA: CRVENO DUGME (SAČUVAJ) --- */
+  /* CRVENO DUGME */
   .btn-anim-red {
-    background: var(--ls-red);
     background: linear-gradient(90deg, var(--ls-red-light) 0%, var(--ls-red) 100%);
     box-shadow: 0px 4px 10px var(--ls-red-glow);
   }
-  .btn-anim-red::before {
-    border-color: var(--ls-red-light);
-    box-shadow: 0 0 15px var(--ls-red-glow);
-  }
-  .btn-anim-red::after {
-    content: '';
-    width: 10px; height: 10px;
-    border-radius: 100%;
-    border: 2px solid var(--ls-red-light);
-    position: absolute;
-    z-index: -1;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    animation: ring-red 1.5s infinite;
-  }
-  .btn-anim-red:hover::after { display: none; }
-
-  @keyframes ring-red {
-    0% { width: 10px; height: 10px; opacity: 1; }
-    100% { width: 150px; height: 150px; opacity: 0; }
-  }
-
-  /* --- VARIJACIJA: SIVO DUGME (OTKAŽI) --- */
+  /* SIVO DUGME */
   .btn-anim-gray {
-    background: var(--ls-gray);
     background: linear-gradient(90deg, var(--ls-gray-light) 0%, var(--ls-gray) 100%);
     box-shadow: 0px 4px 10px var(--ls-gray-glow);
   }
-  .btn-anim-gray::before {
-    border-color: var(--ls-gray-light);
-    box-shadow: 0 0 15px var(--ls-gray-glow);
-  }
-  .btn-anim-gray::after {
-    content: '';
-    width: 10px; height: 10px;
-    border-radius: 100%;
-    border: 2px solid var(--ls-gray-light);
-    position: absolute;
-    z-index: -1;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    animation: ring-gray 1.5s infinite;
-  }
-  .btn-anim-gray:hover::after { display: none; }
-
-  @keyframes ring-gray {
-    0% { width: 10px; height: 10px; opacity: 1; }
-    100% { width: 150px; height: 150px; opacity: 0; }
-  }
-
 
    @media (max-width: 576px) {
-  /* Dugmad na mobilnom zauzimaju punu širinu */
-  .custom-btn {
-    width: 100%;
-    min-width: 100%;
-    margin: 0;
-  }
-
-  /* Smanjujemo gap i centriramo ih */
-  .d-flex.flex-wrap {
-    gap: 10px !important;
-  }
-}
-
+      .custom-btn { width: 100%; margin: 0; }
+      .d-flex.flex-wrap { gap: 10px !important; }
+   }
 </style>
 
 {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        {% for category, message in messages %}
-          <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm mb-3" role="alert" style="border-radius: 15px;">
-            <i class="bi bi-info-circle-fill me-2"></i> {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-          </div>
-        {% endfor %}
-      {% endif %}
-    {% endwith %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm mb-3" role="alert" style="border-radius: 15px;">
+        <i class="bi bi-info-circle-fill me-2"></i> {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
 
 <div class="row justify-content-center">
   <div class="col-lg-8 col-md-10">
@@ -171,25 +126,93 @@
 
       <div class="d-flex justify-content-between align-items-center mb-4">
           <h4 class="mb-0 fw-bold">Najava posete</h4>
-          <span class="badge bg-success rounded-pill px-3 py-2">Gosti</span>
+          <span class="badge bg-danger rounded-pill px-3 py-2">Gosti</span>
       </div>
 
       <form method="post">
 
+        <div class="mb-4 p-3 bg-light rounded border">
+            <label class="form-label fw-bold mb-2 text-secondary">Tip najave:</label>
+            <div class="d-flex gap-4">
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="visit_mode" id="modeSingle" value="single" checked onchange="toggleRecurrence()">
+                    <label class="form-check-label" for="modeSingle">
+                        Jednokratna poseta
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="visit_mode" id="modeRecurring" value="recurring" onchange="toggleRecurrence()">
+                    <label class="form-check-label" for="modeRecurring">
+                        Ponavljajuća poseta (Period)
+                    </label>
+                </div>
+            </div>
+        </div>
+
         <h6 class="text-uppercase text-muted small fw-bold mb-3 d-flex align-items-center">
             <span class="icon-badge"><i class="bi bi-clock-history"></i></span>
-            Detalji posete i kontakt domaćina
+            Vreme i Datum
         </h6>
+
         <div class="row g-3">
             <div class="col-md-6">
-              <label class="form-label">Datum posete <span class="text-danger">*</span></label>
+              <label class="form-label">Datum posete (Početak) <span class="text-danger">*</span></label>
               <input type="date" name="arrival_date" class="form-control" required>
             </div>
             <div class="col-md-6">
-              <label class="form-label">Očekivano vreme posete</label>
+              <label class="form-label">Očekivano vreme</label>
               <input type="time" name="expected_time" class="form-control">
             </div>
+        </div>
 
+        <div id="recurrence-options" class="recurrence-box">
+            <h6 class="text-danger fw-bold mb-3" style="border-bottom: 1px solid rgba(220,38,38,0.2); padding-bottom:10px;">
+                <i class="bi bi-calendar-range me-2"></i>Podešavanje perioda
+            </h6>
+
+            <div class="row g-3 align-items-end">
+                <div class="col-md-6">
+                    <label class="form-label fw-bold text-dark">Ponavljaj do datuma:</label>
+                    <input type="date" name="date_end" class="form-control border-danger">
+                    <div class="form-text text-muted">Zaključno sa ovim datumom.</div>
+                </div>
+            </div>
+
+            <div class="mt-3">
+                <label class="form-label fw-bold d-block text-dark">Izaberi dane dolaska:</label>
+                <div class="btn-group flex-wrap" role="group" aria-label="Days check">
+
+                    <input type="checkbox" class="btn-check btn-check-red" name="days" id="day0" value="0" checked autocomplete="off">
+                    <label class="btn btn-sm" for="day0">Pon</label>
+
+                    <input type="checkbox" class="btn-check btn-check-red" name="days" id="day1" value="1" checked autocomplete="off">
+                    <label class="btn btn-sm" for="day1">Uto</label>
+
+                    <input type="checkbox" class="btn-check btn-check-red" name="days" id="day2" value="2" checked autocomplete="off">
+                    <label class="btn btn-sm" for="day2">Sre</label>
+
+                    <input type="checkbox" class="btn-check btn-check-red" name="days" id="day3" value="3" checked autocomplete="off">
+                    <label class="btn btn-sm" for="day3">Čet</label>
+
+                    <input type="checkbox" class="btn-check btn-check-red" name="days" id="day4" value="4" checked autocomplete="off">
+                    <label class="btn btn-sm" for="day4">Pet</label>
+
+                    <input type="checkbox" class="btn-check btn-check-red" name="days" id="day5" value="5" autocomplete="off">
+                    <label class="btn btn-sm" for="day5">Sub</label>
+
+                    <input type="checkbox" class="btn-check btn-check-red" name="days" id="day6" value="6" autocomplete="off">
+                    <label class="btn btn-sm" for="day6">Ned</label>
+                </div>
+                <div class="form-text text-muted small mt-1">Crveno označeni dani se evidentiraju.</div>
+            </div>
+        </div>
+        <hr class="my-4 text-muted">
+
+        <h6 class="text-uppercase text-muted small fw-bold mb-3 d-flex align-items-center">
+            <span class="icon-badge"><i class="bi bi-person-vcard"></i></span>
+            Detalji posete i kontakt domaćina
+        </h6>
+        <div class="row g-3">
             <div class="col-md-6">
               <label class="form-label">Kod koga dolazi (Domaćin) <span class="text-danger">*</span></label>
               <select name="host_employee" class="form-select" required>
@@ -219,7 +242,7 @@
         <hr class="my-4 text-muted">
 
         <h6 class="text-uppercase text-muted small fw-bold mb-3 d-flex align-items-center">
-            <span class="icon-badge"><i class="bi bi-person-vcard"></i></span>
+            <span class="icon-badge"><i class="bi bi-person-exclamation"></i></span>
             Podaci o gostu
         </h6>
         <div class="row g-3">
@@ -273,25 +296,32 @@
 </div>
 
 <script>
-document.addEventListener("DOMContentLoaded", function() {
-    // Pronalazi polje po imenu 'vehicle_plate'
-    var regInput = document.querySelector('input[name="vehicle_plate"]');
+// JS Funkcija za prikaz/skrivanje
+function toggleRecurrence() {
+    var isRecurring = document.getElementById('modeRecurring').checked;
+    var optionsDiv = document.getElementById('recurrence-options');
+    var dateEndInput = document.querySelector('input[name="date_end"]');
 
+    if (isRecurring) {
+        optionsDiv.style.display = 'block';
+        dateEndInput.setAttribute('required', 'required');
+    } else {
+        optionsDiv.style.display = 'none';
+        dateEndInput.removeAttribute('required');
+        dateEndInput.value = '';
+    }
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    // Validacija registracije
+    var regInput = document.querySelector('input[name="vehicle_plate"]');
     if(regInput) {
         regInput.addEventListener('input', function() {
             var start = this.selectionStart;
             var end = this.selectionEnd;
-
-            // 1. Prebaci u velika slova
             var val = this.value.toUpperCase();
-
-            // 2. Dozvoli SAMO slova (A-Z, ŠĐČĆŽ) i brojeve (0-9)
-            // Sve ostalo (tacke, crtice, zarezi, razmaci) se brise
             val = val.replace(/[^A-Z0-9ŠĐČĆŽ]/g, '');
-
             this.value = val;
-
-            // Vracanje kursora da ne skace na kraj ako korisnik edituje sredinu
             this.setSelectionRange(start, end);
         });
     }
